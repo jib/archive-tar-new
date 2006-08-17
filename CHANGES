@@ -1,0 +1,322 @@
+* important changes in version 1.30 8/2/2006:
+-   applied bleadperl patch: Subject: Change 27416: 
+    Cleanup Archive-Tar temporary test files
+-   address #17985: INSTALLDIRS needs to be 'perl' for >= perl-5.9.3
+-   address #18296: Archive::Tar 1.29 PATCH for VMS to fix test case 
+    failure in 99_pod.t
+    (it's actually a File::Find bug, but this patch works around that)
+-   address: #18720 ([PATCH] Archive::Tar creates POSIX style tar files
+    unnecessarily and by default, leading to compatibility problems 
+    particularly with WinZip.)
+    patch rejected, docpatch added with FAQ and SEE ALSO
+-   apply performance patch from #20399 to enable the user to
+    avoid repeated calls to cwd() if desired.
+
+* important changes in version 1.29 3/1/2006:
+-   integrate bleadperl patches to generate the source files for
+    testing, rather than bundling them
+-   make extract* methods accept a::t::file objects too    
+-   address #17624: Unnecessary calls to cwd() -- cwd() is only
+    called when needed
+-   address #17935: Archive::Tar::write('file_name') should close 
+    or return file handle. -- filehandles are now closed
+-   address #17395: [PATCH] allow extract() to select files by 
+    regexes or substrings; patch did not get integrated, but a FAQ
+    on how to achieve this was added to the FAQ section
+-   address #17310 (Archive-Tar 1.26_01 not tolerant to Archives 
+    with Garbage) -- Garbage protection should be much improved now   
+
+* important changes in version 1.28 19/1/2006:
+-   add pod to ptar and ptardiff so they have manpages generated
+-   integrate change 25333 by rgs@oregon on 2005/08/27 16:28:27
+    which fixes a failure in Archive::Tar tests when perl is built
+    with -Dmksymlinks
+-   integrate Change 26870 by craigb@craigb-brianor on 
+    2006/01/17 04:03:01 holding vms specific patches
+-   mention 'full_name' as property type to list_archive
+-   address #14922 -- unable to reproduce, but add a test
+    case to make sure the issue doesn't occur
+-   apply the docpatch provided by:
+    #15935: File type constants are not documented
+-   document our lack of support for stringified archives and
+    compressed archives opened to a non-io-zlib fh
+-   1.27 was skipped due to PAUSE issues
+    
+* important changes in version 1.26 22/8/2005:
+-   the 'ptardiff' was not included in the exe_files section
+    of the makefile.pl, meaning it didn't get instaleld by default.
+
+* important changes in version 1.25 20/8/2005:
+-   Move the changes into it's own file
+-   Add patch from abeltje to make tests pass on VMS. This is *just*
+    the tests -- code may need some extra work to be reliable  (#12678)
+-   Add faq about accessing 'tar.Z' files, as provided by Paul Marquess
+-   Add a warning if the read() call from new() fails to return data
+-   Address #13636, where heuristics were 'upgrading' a file to a
+    directory if the file had an @LongLink entry, and the shortened
+    filename ended in a '/'.
+-   Add ptardiff program as suggested by KWILLIAMS (#13658)
+
+* important changes in version 1.24 3/5/2005:
+-   Fix a bug where alternate absolute extract paths would add an
+    extra directory upon extract (bug #11342)
+-   Added support for 'perlio' (available for perl5.8 and up).
+    See the Archive::Tar documentation for details
+
+* important changes in version 1.23 3/12/2004:
+-   03_file.t wasn't present in the MANIFEST
+
+* important changes in version 1.22 21/11/2004:
+
+This release holds only bugfixes.
+-   Make list_files() also return full_path() rather than name(),
+    as that would ignore the prefix field. This was found to break
+    PPM (bug #8537)
+
+* important changes in version 1.21 9/11/2004:
+
+This release holds only bugfixes.
+-   Make the size of symlinks be 0 in tar headers, so the next entry
+    is not interpreted as contents of the symlink (bug #7937)
+-   Strip high bits from the mode of the file, as they are stored 
+    differently in the tar header
+-   Make Archive::Tar be kinder to archives that contain garbage,
+    proceeding anyway as long as that's possible.
+
+* important changes in version 1.20 8/11/2004:
+
+This release holds mostly bugfixes, in the form of a rewrite of 
+the handling of the 'prefix' header field.
+-   Rewrote 02_methods.t to be more independant
+-   Rewrote the way 'prefix' headers are dealt with
+-   Require IO::String now to do archive stringification
+-   Add new method 'full_path' to A::T::Item objects
+    - this is used to fix bug 6938
+-   A::T->new now accepts both a class and an object to be friendlier
+    to users
+-   On tar read errors, binary chunks are no longer dumped to STDOUT,
+    but instead the error offset is reported
+
+* important changes in version 1.09 22/5/2004:
+
+This release holds some bugfixes and also the return of bin/ptar
+-   Make new() comply with the documentation and return undef on
+    a read() failure.
+-   Re-adds bin/ptar, which disappeared from this distribution after
+    0.22 (sorry about that).
+-   Makes 'IO::Zlib' a default prerequisite. You can still disable 
+    this by supplying the -n option to 'perl Makefile.PL'.    
+
+* important changes in version 1.08 5/1/2004:
+
+This release holds some bugfixes and extra tests over the 1.07 release:
+-   Fix a file renaming bug that forgot to carry over path info
+-   Fix a bug where adding dirs on win32 gave 'permission denied'
+-   Fix some documentation typos
+-   Add extra tests explicilty for Archive::Tar::File
+-   Move completely from FileHandle to IO::File
+
+* important changes in version 1.07 17/10/2003:
+
+This release holds some bugfixes over the 1.06 release:
+-   Quell some annoying warnings about binmode on unopened filehandles
+-   Add tests for binary files included in a tarball
+
+* important changes in version 1.06 15/10/2003:
+
+This release holds some bugfixes and new features over the 1.05 release.
+-   The chown() code somehow didn't make it into the 1.05 release
+-   Patch _get_handle() to treat all IO::File handles as binary.
+    This should make win32 users happy
+    
+New feature added:
+-   A method called 'contains_file' that will tell you if a certain file
+    is already in the archive.    
+
+* important changes in version 1.05 23/8/2003:
+
+This release holds some bugfixes and new features over the 1.04 release.
+-   The Test::Harness that came with perl 5.6.0 was buggy, require
+    a higher version in the Makefile.PL
+-   Add a global variable $CHOWN that controls whether Archive::Tar
+    should attempt to chown() files or not when it can.    
+
+* important changes in version 1.04 27/7/2003:
+
+This release hold a bugfix over the 1.03 release:
+-   NULL-byte padding was done also on files that had no real content,
+    like symlinks, thus ending up with a number of bytes not dividable
+    by 512.
+
+* important changes in version 1.03 26/6/2003:
+
+This release holds some bugfixes over the 1.02 release, mainly these:
+-   Always do a readlink on the full path, never just the file
+-   Make Archive::Tar write proper headers when dealing with symlinks
+    For this $Archive::Tar::FOLLOW_SYMLINKS is introduced
+
+* important changes in version 1.02 12/6/2003:
+
+This release holds some bugfixes over the 1.01 release, mainly these:
+-   Silly thinko fix in File.pm
+-   Quell some warnings if files are empty
+-   The cache of previously added files was not being emptied
+
+Also, some new features are added:
+
+-   Archive::Tar::File objects now have a C<has_content> method.
+
+* important changes in version 1.01 5/6/2003:
+
+This release holds some bugfixes over the 1.00 release, mainly these:
+
+-   Silence some warnings when writing directories to disk.
+-   A { } inside a map was interpreted as a block rather than a hashref 
+    constructor -- now fixed.
+-   Fix write() to work again as advertised when passed no arguments.
+-   This also means glob support to write is now definitely not
+    available.
+-   Silly thinko of where splitpath() instead of splitdir() was used.
+
+Some new features/changes:
+
+-   Add a new method 'has_content' to Archive::Tar::File.
+-   Cygwin's tests will now also use the 'short' files, since cygwin
+    is built on top of an Win32 filesystem.
+
+* important changes in version 1.00 31/5/2003:
+
+This release marks the new development track as 'stable'. Version got
+upped to '1.00'. Not many changes, merely lots of successful test 
+reports constitute this version. However, a tiny fix regarding the
+reserved string 'VERSION' has been applied, as well as a few more FAQ
+entries have been added.
+
+* important changes in version 0.99_06 5/5/2003:
+
+This release only entails a bug fix on 0.99_05 -- C<extract_archive>
+was dealing wrongly with special files such as hardlinks etc. This
+is now fixed.
+
+* important changes in version 0.99_05 30/4/2003:
+
+Apparently windows has some issues with long path names.
+This version introduces an adapted test suite for Win32 machines.
+
+* important changes in version 0.99_04 28/4/2003:
+
+Make Archive::Tar work happily on perl 5.005_03
+
+* important changes in version 0.99_03 28/4/2003:
+
+This release only has bug fixes on 0.99_02.
+
+Fixed handling of long file names when extracting with 
+C<extract_archive>
+
+Fixed handling of prefixes in tar headers that contain regex meta-
+characters.
+
+Fixed a few spurious warnings about comparing non-numbers.
+
+Expanded the test cases accordingly.
+
+
+* important changes in version 0.99_02 26/3/2003:
+
+Added options to be passed to read, namely:
+	- extract (to extract while reading)
+	- limit (to limit the amount of files read from the archive)
+
+Implemented the '././@LongLink' support, which is GNU's way of
+dealing with filenames that are longer than 255 chars.
+
+Added a global variable $WARN which controls whether warnings get
+printed or just stored.
+
+Fixed a few small bugs that considered files named '0' or '' to not
+really be files and refuse to package them.
+
+* important changes in version 0.99_01 16/3/2003:
+
+Total rewrite from the ground up. Removed as many as the nasty 
+bits (no pun intended) as possible and tucked them away. 
+No code from the old distribution remains.
+
+Cleaned up the API, introduced clean error handling and just 
+generally removed a lot of cruft.
+
+Note that Archive::Tar now requires perl version 5.005_03 or higher 
+to run.
+
+Introduced 2 new submodules:
+Archive::Tar::Constant
+    Simply holds all constants, like block length, tar headers etc
+    
+Archive::Tar::File
+    Object class for all files in a tar archive, to make for easier
+    manipulataion of the archive in-memory.
+    See perldoc Archive::Tar::File after installation.
+
+Added a few features:
+write() now takes an optional 3rd paramater (prefix) which will allow
+you to tuck away all files in that sub directory.
+
+rename() is introduced, allowing for easy renaming of files in the
+archive.
+
+get_files() returns a file of all Archive::Tar::File objects in the
+current read-in archive.
+
+* important changes in version 0.23, 21/1/2003:
+
+Bundled 0.072 and 0.22 to be able to work on Win32 and non-Win32
+platforms. Since the previous version is almost 3 years old, bundling
+seemed like the quickest way to get a working solution again.
+
+Archive::Tar now transparently Does The Right Thing depending what
+platform you are on -- Win32 users, read the Archive::Tar::Win32
+documentation!
+
+I also suppose this makes me the new maintainer...
+
+* important changes in version 0.20:
+
+New class methods create_archive, extract_archive & list_archive.
+
+Archive::Tar no longer keeps the entire archive in memory after
+reading it.  This results in a major reduction in memory consumption.
+
+Added suport for character & block special files.  These files are
+currently created using mknod, so they will only be available on UNIX
+platforms.
+
+See the file ChangeLog for more complete details.
+
+* important changes for version 0.08
+
+Fixed (again) the MacOS support and included alpha support for
+block/character special files as well as improving symlink handling.
+
+NOTE: Archive::Tar is undergoing major work to extend the interface
+and lower memory consumpton.  Any changes to the existing interface
+should be extensions only.
+
+* important changes for version 0.072.
+
+Fixes a problem with systems that don't like open files being deleted.
+It also has an explicit copyright notice so folks like Debian can
+redistribute it in peace, and an new custodial maintainer due to
+Calle's suffering Carpal Tunnel Syndrome.
+
+Get better soon, Calle!
+
+* important changes for version 0.071
+
+It fixes a bunch of bugs, implements POSIX-style long pathnames and
+adds a couple of useful methods.  It has also been verified to work on
+Win32.
+
+This version also includes a small tar-lookalike program, ptar. There
+is no documentation beyond a usage message, but if you've ever used at
+Unix-style tar program it should be very familiar.
