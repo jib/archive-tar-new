@@ -1,0 +1,56 @@
+use ExtUtils::MakeMaker;
+use strict;
+use Getopt::Std;
+use Config;
+my $opt = {};
+getopts( 'nd', $opt );
+
+my $have_zlib = eval { require IO::Zlib; 1 };
+
+unless( $] >= 5.005_03 ) {
+    die qq[Archive::Tar requires perl version 5.005_03 or higher to run\n];
+}
+
+if( !$have_zlib and !$opt->{n} ) {
+    warn    qq[You do not have IO::Zlib installed. This means you can ].
+            qq[not read or write compressed archive!\n] .
+            qq[Note: you can disable this warning (and the prerequisite) ].
+            qq[by invoking Makefile.PL with '-n'\n];
+}
+
+if( !$opt->{d} and not eval { require Text::Diff; 1 } ) {
+    print   qq[\nArchive::Tar comes with a utility called 'ptardiff' which ].
+            qq[lets you run diffs against tar archives.\n\nHowever, this ].
+            qq[utility requires you to have Text::Diff installed.\n\n].
+            qq[To add Text::Diff as a prerequisite, please supply the ].
+            qq['-d' option when invoking this Makefile.PL.\n\n];
+}            
+
+my $prereqs = {
+    'Test::More'    => 0, 
+    'File::Spec'    => 0.82,
+    'Test::Harness' => 2.26,    # bug in older versions
+    'IO::Zlib'      => 1.01,    # the most recent, not modified since 2001
+};
+
+unless ($Config{useperlio}) {
+    $prereqs->{'IO::String'} = 0;       # for better 'return stringified archive'
+}
+
+### ok, you didn't want IO::Zlib ###
+delete $prereqs->{'IO::Zlib'} if $opt->{n};
+
+### so you want text::diff ###
+$prereqs->{'Text::Diff'} = 0 if $opt->{d};
+    
+
+WriteMakefile (
+    NAME            => 'Archive::Tar',
+    VERSION_FROM    => 'lib/Archive/Tar.pm', # finds $VERSION
+    dist            => { COMPRESS => 'gzip -9f', SUFFIX => 'gz' },
+    EXE_FILES       => ['bin/ptar', 'bin/ptardiff'],
+    PREREQ_PM       => $prereqs,
+    INSTALLDIRS     => ( $] >= 5.009003 ? 'perl' : 'site' ),
+    AUTHOR          => 'Jos Boumans <kane[at]cpan.org>',
+	ABSTRACT        => 'Manipulates TAR archives'
+);             
