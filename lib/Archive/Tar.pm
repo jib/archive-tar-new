@@ -565,6 +565,17 @@ sub _extract_file {
             $self->_error( qq[Could not create directory '$dir': $@] );
             return;
         }
+        
+        ### XXX chown here? that might not be the same as in the archive
+        ### as we're only chown'ing to the owner of the file we're extracting
+        ### not to the owner of the directory itself, which may or may not
+        ### be another entry in the archive
+        ### Answer: no, gnu tar doesn't do it either, it'd be the wrong
+        ### way to go.
+        #if( $CHOWN && CAN_CHOWN ) {
+        #    chown $entry->uid, $entry->gid, $dir or
+        #        $self->_error( qq[Could not set uid/gid on '$dir'] );
+        #}
     }
 
     ### we're done if we just needed to create a dir ###
@@ -1594,6 +1605,10 @@ this part of the specification, and may only support the C<GNU Extended
 Header> functionality. To facilitate those clients, you can set the
 C<$Archive::Tar::DO_NOT_USE_PREFIX> variable to C<true>. See the 
 C<GLOBAL VARIABLES> section for details on this variable.
+
+Note that GNU tar earlier than version 1.14 does not cope well with
+the C<POSIX header prefix>. If you use such a version, consider setting
+the C<$Archive::Tar::DO_NOT_USE_PREFIX> variable to C<true>.
 
 =item How do I extract only files that have property X from an archive?
 
