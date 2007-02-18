@@ -303,7 +303,7 @@ sub _read_tar {
 
             if ( $entry->is_file && !$entry->validate ) {
                 ### sometimes the chunk is rather fux0r3d and a whole 512
-                ### bytes ends p in the ->name area.
+                ### bytes ends up in the ->name area.
                 ### clean it up, if need be
                 my $name = $entry->name;
                 $name = substr($name, 0, 100) if length $name > 100;
@@ -1719,8 +1719,9 @@ Lists known issues and incompatibilities; C<http://gd.tuwien.ac.at/utils/archive
 
 =head1 AUTHOR
 
-This module by
-Jos Boumans E<lt>kane@cpan.orgE<gt>.
+This module by Jos Boumans E<lt>kane@cpan.orgE<gt>.
+
+Please reports bugs to E<lt>bug-archive-tar@rt.cpan.orgE<gt>.
 
 =head1 ACKNOWLEDGEMENTS
 
@@ -1729,12 +1730,10 @@ especially Andrew Savige for their help and suggestions.
 
 =head1 COPYRIGHT
 
-This module is
-copyright (c) 2002 Jos Boumans E<lt>kane@cpan.orgE<gt>.
-All rights reserved.
+This module is copyright (c) 2002 - 2007 Jos Boumans 
+E<lt>kane@cpan.orgE<gt>. All rights reserved.
 
-This library is free software;
-you may redistribute and/or modify it under the same
-terms as Perl itself.
+This library is free software; you may redistribute and/or modify 
+it under the same terms as Perl itself.
 
 =cut
