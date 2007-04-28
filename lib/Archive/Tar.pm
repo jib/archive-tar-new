@@ -1127,7 +1127,7 @@ sub add_files {
 
     my @rv;
     for my $file ( @files ) {
-        unless( -e $file ) {
+        unless( -e $file || -l $file ) {
             $self->_error( qq[No such file: '$file'] );
             next;
         }
