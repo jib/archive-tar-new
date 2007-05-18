@@ -408,6 +408,7 @@ sub contains_file {
     my $self = shift;
     my $full = shift or return;
 
+    local $WARN = 0;
     return 1 if $self->_find_entry($full);
     return;
 }
