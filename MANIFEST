@@ -7,10 +7,14 @@ lib/Archive/Tar/File.pm
 Makefile.PL
 MANIFEST			This list of files
 README
-t/00_setup.t
 t/01_use.t
 t/02_methods.t
 t/03_file.t
 t/04_resolved_issues.t
-t/99_clean.t
 t/99_pod.t
+t/src/long/b
+t/src/long/bar.tar
+t/src/long/foo.tgz
+t/src/short/b
+t/src/short/bar.tar
+t/src/short/foo.tgz
