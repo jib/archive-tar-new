@@ -1,3 +1,17 @@
+* important changes in version 1.31 18/5/2007:
+-   No longer use the t/setup.t and t/cleanup.t files but just bundle 
+    the binary files; this was done for core integration, but the new 
+    uupacktool.pl script means we dont have to do this anymore
+_   Apply core perl Change 30997 by rgs@stcosmo on 2007/04/20 15:03:57
+-   Address: #27124: Unneeded warning sent when checking for file
+    inclusion contains_file() will no longer warn to STDERR when a file 
+    is not contained in an archive and $WARN is set to 'true'.
+-   Address #26492: Dangling symlinks not preserved: Archive::Tar used 
+    to complain about dangling symlinks, unlike standard gnu tar, which 
+    would add them silently. This patch brings A::T's behaviour in line 
+    with gnu tar
+-   Minor pod fixes
+
 * important changes in version 1.30 8/2/2006:
 -   applied bleadperl patch: Subject: Change 27416: 
     Cleanup Archive-Tar temporary test files
