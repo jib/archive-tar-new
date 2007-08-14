@@ -406,7 +406,9 @@ underlying file.
 
 sub contains_file {
     my $self = shift;
-    my $full = shift or return;
+    my $full = shift;
+    
+    return unless defined $full;
 
     ### don't warn if the entry isn't there.. that's what this function
     ### is for after all.
@@ -509,7 +511,7 @@ Returns true on success, false on failure.
 
 sub extract_file {
     my $self = shift;
-    my $file = shift or return;
+    my $file = shift;   return unless defined $file;
     my $alt  = shift;
 
     my $entry = $self->_find_entry( $file )
