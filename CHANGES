@@ -1,17 +1,12 @@
-* important changes in version 1.34 15/8/2007:
--   Address #28687: Fwd: Unespected reaction of Archive::Tar
-    A::T didn't always handle filenames that evaluated to false 
-    (like '0') gracefully. This patch adds a few 'or defined' check 
-    to the A::T codebase and a test to ensure filenames like '0' are 
-    handeled correctly.
+* important changes in version 1.32 25/7/2007:
 -   Apply #28407: Unicode and Archive::Tar - documentation patch as
     FAQ patch
-
-* important changes in version 1.32 24/5/2007:
--   Make Archive::Tar work nicely with perls compiled with 
-    -Dmksymlinks. This also fixes an issue introduced in 
-    1.31 where symlinks weren't dereferenced in all cases.
--   Quell warnings when a gid is not resolvable to a group name 
+-   Following a report from rgs that A::T 1.31 doesn't play nicely
+    with -Dmksymlinks under perl core, rewrite the symlink logic in
+    A::T::File->new to continue building an object when reading a 
+    symlink fails, rather than refusing to read on a symlink (which 
+    is obviously wrong)
+-   Quell warnings when a gid is not resolvable to a group name
 
 * important changes in version 1.31 18/5/2007:
 -   No longer use the t/setup.t and t/cleanup.t files but just bundle 
