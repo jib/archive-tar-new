@@ -1,3 +1,15 @@
+* important changes in version 1.36 16/9/2007:
+-   Portability fixes for VMS, as offered by Craig Berry.
+
+* important changes in version 1.34 15/8/2007:
+-   Address #28687: Fwd: Unespected reaction of Archive::Tar
+    A::T didn't always handle filenames that evaluated to false 
+    (like '0') gracefully. This patch adds a few 'or defined' check 
+    to the A::T codebase and a test to ensure filenames like '0' are 
+    handeled correctly.
+-   Apply #28407: Unicode and Archive::Tar - documentation patch as
+	FAQ patch
+
 * important changes in version 1.32 25/7/2007:
 -   Apply #28407: Unicode and Archive::Tar - documentation patch as
     FAQ patch
