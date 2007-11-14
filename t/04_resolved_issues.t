@@ -143,8 +143,8 @@ use_ok( $FileClass );
         ok( 1,                  "   Extracting in insecure mode" );
     
         ok( $tar->extract_file( $out_file ),
-                                    "       File extracted" );
-        ok( -e $out_file,           "       File '$out_file' exists" );
+                                "       File extracted" );
+        ok( -e $out_file,       "       File '$out_file' exists" );
         
         ### and clean up
         unless( $NO_UNLINK ) { 1 while unlink $out_file };
