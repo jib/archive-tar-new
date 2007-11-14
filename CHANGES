@@ -1,3 +1,10 @@
+* important changes in version 1.37_01 11/11/2007:
+_ Address #30380: directory traversal vulnerability in Archive-Tar
+  - Add $INSECURE_EXTRACT_MODE which defaults to 0, disallowing
+    archives to extract files outside of cwd(). This is a backwards
+    incompatible change from 1.36 and before.
+  - Add a -I option to ptar to enable insecure extraction if needed
+
 * important changes in version 1.36 16/9/2007:
 -   Portability fixes for VMS, as offered by Craig Berry.
 
