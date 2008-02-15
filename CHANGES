@@ -1,3 +1,6 @@
+* important changes in vesrion 1.38    14/12/2007:
+- Promote 1.37_01 to stable.
+
 * important changes in version 1.37_01 11/11/2007:
 _ Address #30380: directory traversal vulnerability in Archive-Tar
   - Add $INSECURE_EXTRACT_MODE which defaults to 0, disallowing
