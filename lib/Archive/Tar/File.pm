@@ -268,6 +268,29 @@ sub _new_from_file {
     my @items       = qw[mode uid gid size mtime];
     my %hash        = map { shift(@items), $_ } (lstat $path)[2,4,5,7,9];
 
+    if (ON_VMS) {
+        ### VMS has two UID modes, traditional and POSIX.  Normally POSIX is
+        ### not used.  We currently do not have an easy way to see if we are in
+        ### POSIX mode.  In traditional mode, the UID is actually the VMS UIC.
+        ### The VMS UIC has the upper 16 bits is the GID, which in many cases
+        ### the VMS UIC will be larger than 209715, the largest that TAR can
+        ### handle.  So for now, assume it is traditional if the UID is larger
+        ### than 0x10000.
+
+        if ($hash{uid} > 0x10000) {
+            $hash{uid} = $hash{uid} & 0xFFFF;
+        }
+
+        ### The file length from stat() is the physical length of the file
+        ### However the amount of data read in may be more for some file types.
+        ### Fixed length files are read past the logical EOF to end of the block
+        ### containing.  Other file types get expanded on read because record
+        ### delimiters are added.
+
+        my $data_len = length $data;
+        $hash{size} = $data_len if $hash{size} < $data_len;
+
+    }
     ### you *must* set size == 0 on symlinks, or the next entry will be
     ### though of as the contents of the symlink, which is wrong.
     ### this fixes bug #7937
