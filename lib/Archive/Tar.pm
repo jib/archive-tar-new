@@ -581,19 +581,52 @@ sub _extract_file {
             : File::Spec::Unix->splitdir( $dirs );  # it's UNIX-style, likely
                                                     # straight from the tarball
 
-        ### paths that leave the current directory are not allowed under
-        ### strict mode, so only allow it if a user tells us to do this.
         if( not defined $alt            and 
-            not $INSECURE_EXTRACT_MODE  and 
-            grep { $_ eq '..' } @dirs
-        ) {
-            $self->_error(
-                q[Entry ']. $entry->full_path .q[' is attempting to leave the ].
-                q[current working directory. Not extracting under SECURE ].
-                q[EXTRACT MODE]
-            );
-            return;
-        }            
+            not $INSECURE_EXTRACT_MODE 
+        ) {            
+
+            ### paths that leave the current directory are not allowed under
+            ### strict mode, so only allow it if a user tells us to do this.
+            if( grep { $_ eq '..' } @dirs ) {
+    
+                $self->_error(
+                    q[Entry ']. $entry->full_path .q[' is attempting to leave ].
+                    q[the current working directory. Not extracting under ].
+                    q[SECURE EXTRACT MODE]
+                );
+                return;
+            } 
+        
+            ### the archive may be asking us to extract into a symlink. This
+            ### is not sane and a possible security issue, as outlined here:
+            ### https://rt.cpan.org/Ticket/Display.html?id=30380
+            ### https://bugzilla.redhat.com/show_bug.cgi?id=295021
+            ### https://issues.rpath.com/browse/RPL-1716
+            my $full_path = $cwd;
+            for my $d ( @dirs ) {
+                $full_path = File::Spec->catdir( $full_path, $d );
+                
+                ### we've already checked this one, and it's safe. Move on.
+                next if ref $self and $self->{_link_cache}->{$full_path};
+
+                if( -l $full_path ) {
+                    my $to   = readlink $full_path;
+                    my $diag = "symlinked directory ($full_path => $to)";
+
+                    $self->_error(
+                        q[Entry ']. $entry->full_path .q[' is attempting to ].
+                        qq[extract to a $diag. This is considered a security ].
+                        q[vulnerability and not allowed under SECURE EXTRACT ].
+                        q[MODE]
+                    );
+                    return;
+                }
+                
+                ### XXX keep a cache if possible, so the stats become cheaper:
+                $self->{_link_cache}->{$full_path} = 1 if ref $self;
+            }
+        }
+
         
         ### '.' is the directory delimiter, of which the first one has to
         ### be escaped/changed.
@@ -635,7 +668,8 @@ sub _extract_file {
     unless ( -d _ ) {
         eval { File::Path::mkpath( $dir, 0, 0777 ) };
         if( $@ ) {
-            $self->_error( qq[Could not create directory '$dir': $@] );
+            my $fp = $entry->full_path;
+            $self->_error(qq[Could not create directory '$dir' for '$fp': $@]);
             return;
         }
         
@@ -725,8 +759,8 @@ sub _make_special_file {
                 or $fail++;
         }
 
-        $err =  qq[Making symbolink link from '] . $entry->linkname .
-                qq[' to '$file' failed] if $fail;
+        $err =  qq[Making symbolic link '$file' to '] .
+                $entry->linkname .q[' failed] if $fail;
 
     } elsif ( $entry->is_hardlink ) {
         my $fail;
