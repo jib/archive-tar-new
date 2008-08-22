@@ -61,58 +61,32 @@ if( $opts->{c} ) {
     }
 }
 
-
+### pod & usage in one
 sub usage {
-    qq[
-Usage:  ptar -c [-v] [-z] [-f ARCHIVE_FILE] FILE FILE ...
-        ptar -x [-v] [-z] [-f ARCHIVE_FILE]
-        ptar -t [-z] [-f ARCHIVE_FILE]
-        ptar -h
+    my $usage .= << '=cut';
+=pod
+
+=head1 NAME
+
+    ptar - a tar-like program written in perl
+
+=head1 DESCRIPTION
 
     ptar is a small, tar look-alike program that uses the perl module
     Archive::Tar to extract, create and list tar archives.
 
-Options:
-    x   Extract from ARCHIVE_FILE
-    c   Create ARCHIVE_FILE from FILE
-    t   List the contents of ARCHIVE_FILE
-    f   Name of the ARCHIVE_FILE to use. Default is './default.tar'
-    z   Read/Write zlib compressed ARCHIVE_FILE (not always available)
-    v   Print filenames as they are added or extraced from ARCHIVE_FILE
-    h   Prints this help message
-    I   Enable 'Insecure Extract Mode', which allows archives to extract
-        files outside the current working directory. (Not advised).
-
-See Also:
-    tar(1)
-    Archive::Tar
-
-    \n]
-}
-
-__END__
-
-=head1 NAME
-
-ptar - a tar-like program written in perl
-
-=head1 DESCRIPTION
-
-ptar is a small, tar look-alike program that uses the perl module
-Archive::Tar to extract, create and list tar archives.
-
 =head1 SYNOPSIS
 
-    ptar -c [-v] [-z] [-f ARCHIVE_FILE] FILE FILE ...
-    ptar -x [-v] [-z] [-f ARCHIVE_FILE]
-    ptar -t [-z] [-f ARCHIVE_FILE]
+    ptar -c [-v] [-z] [-f ARCHIVE_FILE | -] FILE FILE ...
+    ptar -x [-v] [-z] [-f ARCHIVE_FILE | -]
+    ptar -t [-z] [-f ARCHIVE_FILE | -]
     ptar -h
 
 =head1 OPTIONS
 
-    x   Extract from ARCHIVE_FILE
-    c   Create ARCHIVE_FILE from FILE
-    t   List the contents of ARCHIVE_FILE
+    c   Create ARCHIVE_FILE or STDOUT (-) from FILE
+    x   Extract from ARCHIVE_FILE or STDIN (-)
+    t   List the contents of ARCHIVE_FILE or STDIN (-)
     f   Name of the ARCHIVE_FILE to use. Default is './default.tar'
     z   Read/Write zlib compressed ARCHIVE_FILE (not always available)
     v   Print filenames as they are added or extraced from ARCHIVE_FILE
@@ -120,6 +94,17 @@ Archive::Tar to extract, create and list tar archives.
 
 =head1 SEE ALSO
 
-tar(1), L<Archive::Tar>.
+    tar(1), L<Archive::Tar>.
 
 =cut
+
+    ### strip the pod directives
+    $usage =~ s/=pod\n//g
+    $usage =~ s/=head1 //g;
+    
+    ### add some newlines
+    $usage .= $/.$/;
+    
+    return $usage;
+}
+
