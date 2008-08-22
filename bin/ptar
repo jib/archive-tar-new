@@ -33,21 +33,33 @@ if( $opts->{c} ) {
     find( sub { push @files, $File::Find::name;
                 print $File::Find::name.$/ if $verbose }, @ARGV );
 
+    if ($file eq '-') {
+        use IO::Handle;
+        $file = IO::Handle->new();
+        $file->fdopen(fileno(STDOUT),"w");
+    }
+
     Archive::Tar->create_archive( $file, $compress, @files );
-    exit;
+
+} else {
+    if ($file eq '-') {
+        use IO::Handle;
+        $file = IO::Handle->new();
+        $file->fdopen(fileno(STDIN),"r");
+    }
+
+    ### print the files we're finding?
+    my $print = $verbose || $opts->{'t'} || 0;
+
+    my $iter = Archive::Tar->iter( $file );
+        
+    while( my $f = $iter->() ) {
+        print $f->full_path . $/ if $print;
+        
+        ### extract it
+        $f->extract if $opts->{'x'};
+    }
 }
-
-my $tar = Archive::Tar->new($file, $compress);
-
-if( $opts->{t} ) {
-    print map { $_->full_path . $/ } $tar->get_files;
-
-} elsif( $opts->{x} ) {
-    print map { $_->full_path . $/ } $tar->get_files
-        if $verbose;
-    Archive::Tar->extract_archive($file, $compress);
-}
-
 
 
 sub usage {
@@ -77,6 +89,8 @@ See Also:
 
     \n]
 }
+
+__END__
 
 =head1 NAME
 
