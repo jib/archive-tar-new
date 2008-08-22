@@ -685,8 +685,13 @@ sub _extract_file {
         $self->_make_special_file( $entry, $full ) or return;
     }
 
-    utime time, $entry->mtime - TIME_OFFSET, $full or
-        $self->_error( qq[Could not update timestamp] );
+    ### only update the timestamp if it's not a symlink; that will change the
+    ### timestamp of the original. This addresses bug #33669: Could not update
+    ### timestamp warning on symlinks
+    if( not -l $full ) {
+        utime time, $entry->mtime - TIME_OFFSET, $full or
+            $self->_error( qq[Could not update timestamp] );
+    }
 
     if( $CHOWN && CAN_CHOWN ) {
         chown $entry->uid, $entry->gid, $full or
