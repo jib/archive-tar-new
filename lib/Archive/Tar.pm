@@ -163,7 +163,8 @@ the expression will be read.
 If set to true, immediately extract entries when reading them. This
 gives you the same memory break as the C<extract_archive> function.
 Note however that entries will not be read into memory, but written
-straight to disk.
+straight to disk. This means no C<Archive::Tar::File> objects are 
+created for you to inspect.
 
 =back
 
@@ -571,7 +572,9 @@ sub _extract_file {
 
     ### it's a relative path ###
     } else {
-        my $cwd     = (defined $self->{cwd} ? $self->{cwd} : cwd());
+        my $cwd     = (ref $self and defined $self->{cwd}) 
+                        ? $self->{cwd} 
+                        : cwd();
 
         my @dirs = defined $alt
             ? File::Spec->splitdir( $dirs )         # It's a local-OS path
@@ -1441,8 +1444,8 @@ sub create_archive {
     return $tar->write( $file, $gzip );
 }
 
-=head2 Archive::Tar->iter( $filename, {opt => $val} )
-=head2 Archive::Tar->iterator( $filename, {opt => $val} )
+=head2 Archive::Tar->iter( $filename, [ $compressed, {opt => $val} ] )
+=head2 Archive::Tar->iterator( $filename, [ $compressed, {opt => $val} ] )
 
 Returns an iterator function that reads the tar file without loading
 it all in memory.  Each time the function is called it will return the
@@ -1455,7 +1458,7 @@ identical to the arguments passed to C<read()>.
 
 Example usage:
 
-   my $next = Archive::Tar->iter( "example.tar.gz", {filter => qr/\.pm$/} );
+   my $next = Archive::Tar->iter( "example.tar.gz", 1, {filter => qr/\.pm$/} );
 
    while( my $f = $next->() ) {
        print $f->name, "\n";
@@ -1470,12 +1473,13 @@ Example usage:
 sub iter {
     my $class       = shift;
     my $filename    = shift or return;
+    my $compressed  = shift or 0;
     my $opts        = shift || {};
 
     ### get a handle to read from.
     my $handle = $class->_get_handle(
         $filename, 
-        delete $opts->{compressed} || 0, 
+        $compressed, 
         READ_ONLY->( ZLIB )
     ) or return;
 
