@@ -1458,12 +1458,15 @@ identical to the arguments passed to C<read()>.
 
 Example usage:
 
-   my $next = Archive::Tar->iter( "example.tar.gz", 1, {filter => qr/\.pm$/} );
+    my $next = Archive::Tar->iter( "example.tar.gz", 1, {filter => qr/\.pm$/} );
 
-   while( my $f = $next->() ) {
-       print $f->name, "\n";
-       # ...
-   }
+    while( my $f = $next->() ) {
+        print $f->name, "\n";
+
+        $f->extract or warn "Extraction failed";
+        
+        # ....
+    }
 
 =cut
 
