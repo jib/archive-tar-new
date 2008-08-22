@@ -153,6 +153,11 @@ all options are case-sensitive.
 Do not read more than C<limit> files. This is useful if you have
 very big archives, and are only interested in the first few files.
 
+=item filter
+
+Can be set to a regular expression.  Only files with names that match
+the expression will be read.
+
 =item extract
 
 If set to true, immediately extract entries when reading them. This
@@ -237,6 +242,7 @@ sub _read_tar {
     my $opts    = shift || {};
 
     my $count   = $opts->{limit}    || 0;
+    my $filter  = $opts->{filter};
     my $extract = $opts->{extract}  || 0;
 
     ### set a cap on the amount of files to extract ###
@@ -370,6 +376,10 @@ sub _read_tar {
             $entry->name( $$real_name );
             $entry->prefix('');
             undef $real_name;
+        }
+
+        if ($filter && $entry->name !~ $filter) {
+            next LOOP;
         }
 
         $self->_extract_file( $entry ) if $extract
@@ -1431,6 +1441,61 @@ sub create_archive {
     return $tar->write( $file, $gzip );
 }
 
+=head2 Archive::Tar->iter( $filename, {opt => $val} )
+=head2 Archive::Tar->iterator( $filename, {opt => $val} )
+
+Returns an iterator function that reads the tar file without loading
+it all in memory.  Each time the function is called it will return the
+next file in the tarball. The files are returned as
+C<Archive::Tar::File> objects. The iterator function returns the
+empty list once it has exhausted the the files contained.
+
+The second argument can be a hash reference with options, which are
+identical to the arguments passed to C<read()>.
+
+Example usage:
+
+   my $next = Archive::Tar->iter( "example.tar.gz", {filter => qr/\.pm$/} );
+
+   while( my $f = $next->() ) {
+       print $f->name, "\n";
+       # ...
+   }
+
+=cut
+
+### alias
+*iterator = *iter;
+
+sub iter {
+    my $class       = shift;
+    my $filename    = shift or return;
+    my $opts        = shift || {};
+
+    ### get a handle to read from.
+    my $handle = $class->_get_handle(
+        $filename, 
+        delete $opts->{compressed} || 0, 
+        READ_ONLY->( ZLIB )
+    ) or return;
+
+    my @data;
+    return sub {
+        return shift(@data)     if @data;       # more than one file returned?
+        return                  unless $handle; # handle exhausted?
+
+        ### read data, should only return file
+        @data = @{ $class->_read_tar($handle, { %$opts, limit => 1 }) };
+
+        ### return one piece of data
+        return shift(@data)     if @data;
+        
+        ### data is exhausted, free the filehandle
+        undef $handle;
+        return;
+    };
+}
+
 =head2 Archive::Tar->list_archive ($file, $compressed, [\@properties])
 
 Returns a list of the names of all the files in the archive.  The
@@ -1852,8 +1917,8 @@ Please reports bugs to E<lt>bug-archive-tar@rt.cpan.orgE<gt>.
 
 =head1 ACKNOWLEDGEMENTS
 
-Thanks to Sean Burke, Chris Nandor, Chip Salzenberg, Tim Heaney and
-especially Andrew Savige for their help and suggestions.
+Thanks to Sean Burke, Chris Nandor, Chip Salzenberg, Tim Heaney, Gisle Aas
+and especially Andrew Savige for their help and suggestions.
 
 =head1 COPYRIGHT
 
