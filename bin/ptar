@@ -1,12 +1,13 @@
 #!/usr/bin/perl
 use strict;
 
+use File::Find;
 use Getopt::Std;
 use Archive::Tar;
-use File::Find;
+use Data::Dumper;
 
 my $opts = {};
-getopts('dcvzthxf:I', $opts) or die usage();
+getopts('Ddcvzthxf:I', $opts) or die usage();
 
 ### show the help message ###
 die usage() if $opts->{h};
@@ -55,6 +56,9 @@ if( $opts->{c} ) {
         
     while( my $f = $iter->() ) {
         print $f->full_path . $/ if $print;
+
+        ### data dumper output
+        print Dumper( $f ) if $opts->{'D'};
         
         ### extract it
         $f->extract if $opts->{'x'};
@@ -99,7 +103,7 @@ sub usage {
 =cut
 
     ### strip the pod directives
-    $usage =~ s/=pod\n//g
+    $usage =~ s/=pod\n//g;
     $usage =~ s/=head1 //g;
     
     ### add some newlines
