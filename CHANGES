@@ -1,4 +1,21 @@
-* important changes in vesrion 1.38    14/12/2007:
+* important changes in version 1.39_01 22/08/2008:
+- Address the second part mentioned in this report:
+  #30380: directory traversal vulnerability in Archive-Tar
+  Archives are no longer allowed to extract into symlinked directories,
+  unless Insecure Extract Mode is enabled (which is off by default).
+- Add regression tests for this behaviour
+- Address #33669 (Could not update timestamp warning on symlinks)
+  Don't update timestamps on symlinks, they'll modify the original
+- Apply core patch: [patch@33971] Archive::Tar was building corrupt
+  archives on VMS as supplied by John Malmberg
+- Address #37375: ptar should allow '-' as an archive_file name
+  Patch provided by glenn jackman
+- Add convenience method ->extract() to A::T::File
+- improve docs of A::T::File by adding rv & object in the header
+- Address #38580: [PATCH] Archive::Tar-&gt;iter
+  This adds an iterator to Archive::Tar, thanks to Gisle Aas
+
+* important changes in version 1.38    14/12/2007:
 - Promote 1.37_01 to stable.
 
 * important changes in version 1.37_01 11/11/2007:
