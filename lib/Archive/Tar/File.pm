@@ -1,6 +1,7 @@
 package Archive::Tar::File;
 use strict;
 
+use Carp                ();
 use IO::File;
 use File::Spec::Unix    ();
 use File::Spec          ();
@@ -448,6 +449,8 @@ Returns true on success and false on failure.
 
 sub extract {
     my $self = shift;
+    
+    local $Carp::CarpLevel += 1;
     
     return Archive::Tar->_extract_file( $self, @_ );
 }
