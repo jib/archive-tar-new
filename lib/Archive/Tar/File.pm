@@ -6,10 +6,12 @@ use File::Spec::Unix    ();
 use File::Spec          ();
 use File::Basename      ();
 
+### avoid circular use, so only require;
+require Archive::Tar;
 use Archive::Tar::Constant;
 
 use vars qw[@ISA $VERSION];
-@ISA        = qw[Archive::Tar];
+#@ISA        = qw[Archive::Tar];
 $VERSION    = '0.02';
 
 ### set value to 1 to oct() it during the unpack ###
@@ -154,13 +156,13 @@ Raw tar header -- not useful for most users
 
 =head1 Methods
 
-=head2 new( file => $path )
+=head2 Archive::Tar::File->new( file => $path )
 
 Returns a new Archive::Tar::File object from an existing file.
 
 Returns undef on failure.
 
-=head2 new( data => $path, $data, $opt )
+=head2 Archive::Tar::File->new( data => $path, $data, $opt )
 
 Returns a new Archive::Tar::File object from data.
 
@@ -171,7 +173,7 @@ tar header), which are described above in the Accessors section.
 
 Returns undef on failure.
 
-=head2 new( chunk => $chunk )
+=head2 Archive::Tar::File->new( chunk => $chunk )
 
 Returns a new Archive::Tar::File object from a raw 512-byte tar
 archive chunk.
@@ -411,7 +413,23 @@ sub _downgrade_to_plainfile {
     return 1;
 }
 
-=head2 full_path
+=head2 $bool = $file->extract( [ $alternative_name ] )
+
+Extract this object, optionally to an alternative name. 
+
+See C<< Archive::Tar->extract_file >> for details.
+
+Returns true on success and false on failure.
+
+=cut
+
+sub extract {
+    my $self = shift;
+    
+    return Archive::Tar->_extract_file( $self, @_ );
+}
+
+=head2 $path = $file->full_path
 
 Returns the full path from the tar header; this is basically a
 concatenation of the C<prefix> and C<name> fields.
@@ -429,7 +447,7 @@ sub full_path {
 }
 
 
-=head2 validate
+=head2 $bool = $file->validate
 
 Done by Archive::Tar internally when reading the tar file:
 validate the header against the checksum to ensure integer tar file.
@@ -448,7 +466,7 @@ sub validate {
 	return unpack ("%16C*", $raw) == $self->chksum ? 1 : 0;
 }
 
-=head2 has_content
+=head2 $bool = $file->has_content
 
 Returns a boolean to indicate whether the current object has content.
 Some special files like directories and so on never will have any
@@ -462,7 +480,7 @@ sub has_content {
     return defined $self->data() && length $self->data() ? 1 : 0;
 }
 
-=head2 get_content
+=head2 $content = $file->get_content
 
 Returns the current content for the in-memory file
 
@@ -473,7 +491,7 @@ sub get_content {
     $self->data( );
 }
 
-=head2 get_content_by_ref
+=head2 $cref = $file->get_content_by_ref
 
 Returns the current content for the in-memory file as a scalar
 reference. Normal users won't need this, but it will save memory if
@@ -489,7 +507,7 @@ sub get_content_by_ref {
     return \$self->{data};
 }
 
-=head2 replace_content( $content )
+=head2 $bool = $file->replace_content( $content )
 
 Replace the current content of the file with the new content. This
 only affects the in-memory archive, not the on-disk version until
@@ -508,7 +526,7 @@ sub replace_content {
     return 1;
 }
 
-=head2 rename( $new_name )
+=head2 $bool = $file->rename( $new_name )
 
 Rename the current file to $new_name.
 
@@ -540,49 +558,49 @@ use the following methods:
 
 =over 4
 
-=item is_file
+=item $file->is_file
 
 Returns true if the file is of type C<file>
 
-=item is_dir
+=item $file->is_dir
 
 Returns true if the file is of type C<dir>
 
-=item is_hardlink
+=item $file->is_hardlink
 
 Returns true if the file is of type C<hardlink>
 
-=item is_symlink
+=item $file->is_symlink
 
 Returns true if the file is of type C<symlink>
 
-=item is_chardev
+=item $file->is_chardev
 
 Returns true if the file is of type C<chardev>
 
-=item is_blockdev
+=item $file->is_blockdev
 
 Returns true if the file is of type C<blockdev>
 
-=item is_fifo
+=item $file->is_fifo
 
 Returns true if the file is of type C<fifo>
 
-=item is_socket
+=item $file->is_socket
 
 Returns true if the file is of type C<socket>
 
-=item is_longlink
+=item $file->is_longlink
 
 Returns true if the file is of type C<LongLink>.
 Should not happen after a successful C<read>.
 
-=item is_label
+=item $file->is_label
 
 Returns true if the file is of type C<Label>.
 Should not happen after a successful C<read>.
 
-=item is_unknown
+=item $file->is_unknown
 
 Returns true if the file type is C<unknown>
 
