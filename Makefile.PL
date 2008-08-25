@@ -5,14 +5,12 @@ use Config;
 my $opt = {};
 getopts( 'nd', $opt );
 
-my $have_zlib = eval { require IO::Zlib; 1 };
-
 unless( $] >= 5.005_03 ) {
     die qq[Archive::Tar requires perl version 5.005_03 or higher to run\n];
 }
 
-if( !$have_zlib and !$opt->{n} ) {
-    warn    qq[You do not have IO::Zlib installed. This means you can ].
+if( !eval { require IO::Compress::Bzip2; 1 } and !$opt->{n} ) {
+    warn    qq[You do not have IO::Compress::Bzip2 installed. This means you can ].
             qq[not read or write compressed archive!\n] .
             qq[Note: you can disable this warning (and the prerequisite) ].
             qq[by invoking Makefile.PL with '-n'\n];
@@ -27,10 +25,12 @@ if( !$opt->{d} and not eval { require Text::Diff; 1 } ) {
 }            
 
 my $prereqs = {
-    'Test::More'    => 0, 
-    'File::Spec'    => 0.82,
-    'Test::Harness' => 2.26,    # bug in older versions
-    'IO::Zlib'      => 1.01,    # the most recent, not modified since 2001
+    'Test::More'            => 0, 
+    'Package::Constants'    => 0,
+    'File::Spec'            => 0.82,
+    'Test::Harness'         => 2.26,    # bug in older versions
+    'IO::Zlib'              => 1.01,    # the most recent, not modified since 2001
+    'IO::Compress::Bzip2'   => 2.012,   # bzip2 support
 };
 
 unless ($Config{useperlio}) {
@@ -38,7 +38,7 @@ unless ($Config{useperlio}) {
 }
 
 ### ok, you didn't want IO::Zlib ###
-delete $prereqs->{'IO::Zlib'} if $opt->{n};
+delete $prereqs->{'IO::Compress::Bzip2'} if $opt->{n};
 
 ### so you want text::diff ###
 $prereqs->{'Text::Diff'} = 0 if $opt->{d};

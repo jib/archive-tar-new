@@ -7,12 +7,27 @@
 package Archive::Tar;
 require 5.005_03;
 
+use Cwd;
+use IO::Zlib;
+use IO::File;
+use Carp                qw(carp croak);
+use File::Spec          ();
+use File::Spec::Unix    ();
+use File::Path          ();
+
+use Archive::Tar::File;
+use Archive::Tar::Constant;
+
+require Exporter;
+
 use strict;
 use vars qw[$DEBUG $error $VERSION $WARN $FOLLOW_SYMLINK $CHOWN $CHMOD
             $DO_NOT_USE_PREFIX $HAS_PERLIO $HAS_IO_STRING
-            $INSECURE_EXTRACT_MODE
+            $INSECURE_EXTRACT_MODE @ISA @EXPORT
          ];
 
+@ISA                    = qw[Exporter];
+@EXPORT                 = ( COMPRESS_GZIP, COMPRESS_BZIP );
 $DEBUG                  = 0;
 $WARN                   = 1;
 $FOLLOW_SYMLINK         = 0;
@@ -28,23 +43,12 @@ BEGIN {
 
     ### try and load IO::String anyway, so you can dynamically
     ### switch between perlio and IO::String
-    eval {
+    $HAS_IO_STRING = eval {
         require IO::String;
         import IO::String;
-    };
-    $HAS_IO_STRING = $@ ? 0 : 1;
-
+        1;
+    } || 0;
 }
-
-use Cwd;
-use IO::File;
-use Carp                qw(carp croak);
-use File::Spec          ();
-use File::Spec::Unix    ();
-use File::Path          ();
-
-use Archive::Tar::File;
-use Archive::Tar::Constant;
 
 =head1 NAME
 
@@ -55,7 +59,7 @@ Archive::Tar - module for manipulations of tar archives
     use Archive::Tar;
     my $tar = Archive::Tar->new;
 
-    $tar->read('origin.tgz',1);
+    $tar->read('origin.tgz');
     $tar->extract();
 
     $tar->add_files('file/foo.pl', 'docs/README');
@@ -63,7 +67,9 @@ Archive::Tar - module for manipulations of tar archives
 
     $tar->rename('oldname', 'new/file/name');
 
-    $tar->write('files.tar');
+    $tar->write('files.tar');                   # plain tar
+    $tar->write('files.tgz', COMPRESSED_GZIP);  # gzip compressed
+    $tar->write('files.tbz', COMPRESSED_BZIP);  # bzip2 compressed
 
 =head1 DESCRIPTION
 
@@ -122,23 +128,25 @@ sub new {
     return $obj;
 }
 
-=head2 $tar->read ( $filename|$handle, $compressed, {opt => 'val'} )
+=head2 $tar->read ( $filename|$handle, [$compressed, {opt => 'val'}] )
 
 Read the given tar file into memory.
 The first argument can either be the name of a file or a reference to
 an already open filehandle (or an IO::Zlib object if it's compressed)
-The second argument indicates whether the file referenced by the first
-argument is compressed.
 
 The C<read> will I<replace> any previous content in C<$tar>!
 
-The second argument may be considered optional if IO::Zlib is
-installed, since it will transparently Do The Right Thing.
-Archive::Tar will warn if you try to pass a compressed file if
-IO::Zlib is not available and simply return.
+The second argument may be considered optional, but remains for 
+backwards compatibility. Archive::Tar now looks at the file
+magic to determine what class should be used to open the file
+and will transparently Do The Right Thing.
+
+Archive::Tar will warn if you try to pass a bzip2 compressed file and the
+IO::Zlib / IO::Uncompress::Bunzip2 modules are not available and simply return.
 
 Note that you can currently B<not> pass a C<gzip> compressed
-filehandle, which is not opened with C<IO::Zlib>, nor a string
+filehandle, which is not opened with C<IO::Zlib>, a C<bzip2> compressed
+filehandle, which is not opened with C<IO::Uncompress::Bunzip2>, nor a string
 containing the full archive information (either compressed or
 uncompressed). These are worth while features, but not currently
 implemented. See the C<TODO> section.
@@ -200,42 +208,89 @@ sub read {
 }
 
 sub _get_handle {
-    my $self = shift;
-    my $file = shift;   return unless defined $file;
-                        return $file if ref $file;
+    my $self     = shift;
+    my $file     = shift;   return unless defined $file;
+                            return $file if ref $file;
+    my $compress = shift || 0;
+    my $mode     = shift || READ_ONLY->( ZLIB ); # default to read only
 
-    my $gzip = shift || 0;
-    my $mode = shift || READ_ONLY->( ZLIB ); # default to read only
 
-    my $fh; my $bin;
-
-    ### only default to ZLIB if we're not trying to /write/ to a handle ###
-    if( ZLIB and $gzip || MODE_READ->( $mode ) ) {
-
-        ### IO::Zlib will Do The Right Thing, even when passed
-        ### a plain file ###
-        $fh = new IO::Zlib;
-
-    } else {
-        if( $gzip ) {
-            $self->_error(qq[Compression not available - Install IO::Zlib!]);
-            return;
-
-        } else {
-            $fh = new IO::File;
-            $bin++;
+    ### get a FH opened to the right class, so we can use it transparently
+    ### throughout the program
+    my $fh;
+    {   ### reading magic only makes sense if we're opening a file for
+        ### reading. otherwise, just use what the user requested.
+        my $magic = '';
+        if( MODE_READ->($mode) ) {
+            open my $tmp, $file or do {
+                $self->_error( qq[Could not open '$file' for reading: $!] );
+                return;
+            };
+        
+            ### read the first 4 bites of the file to figure out which class to
+            ### use to open the file.
+            sysread( $tmp, $magic, 4 );    
+            close $tmp;
         }
-    }
 
-    unless( $fh->open( $file, $mode ) ) {
-        $self->_error( qq[Could not create filehandle for '$file': $!!] );
-        return;
-    }
+        ### is it bzip?
+        ### if you asked specifically for bzip compression, or if we're in
+        ### read mode and the magic numbers add up, use bzip
+        if( BZIP and (
+                ($compress eq COMPRESS_BZIP) or 
+                ( MODE_READ->($mode) and $magic =~ BZIP_MAGIC_NUM )
+            )
+        ) {
+        
+            ### different reader/writer modules, different error vars... sigh
+            if( MODE_READ->($mode) ) {
+                $fh = IO::Uncompress::Bunzip2->new( $file ) or do {
+                    $self->_error( qq[Could not read '$file': ] .
+                        $IO::Uncompress::Bunzip2::Bunzip2Error
+                    );
+                    return;
+                };
+            
+            } else {
+                $fh = IO::Compress::Bzip2->new( $file ) or do {
+                    $self->_error( qq[Could not write to '$file': ] .
+                        $IO::Compress::Bzip2::Bzip2Error
+                    );
+                    return;
+                };
+            }
+            
+        ### is it gzip?
+        ### if you asked for compression, if you wanted to read or the gzip
+        ### magic number is present (redundant with read)
+        } elsif( ZLIB and (
+                    $compress or MODE_READ->($mode) or $magic =~ GZIP_MAGIC_NUM
+                 )        
+        ) {
+            $fh = IO::Zlib->new;
 
-    binmode $fh if $bin;
+            unless( $fh->open( $file, $mode ) ) {
+                $self->_error(qq[Could not create filehandle for '$file': $!]);
+                return;
+            }
+            
+        ### is it plain tar?
+        } else {
+            $fh = IO::File->new;
+
+            unless( $fh->open( $file, $mode ) ) {
+                $self->_error(qq[Could not create filehandle for '$file': $!]);
+                return;
+            }
+
+            ### enable bin mode on tar archives
+            binmode $fh;
+        }            
+    }
 
     return $fh;
 }
+
 
 sub _read_tar {
     my $self    = shift;
@@ -1001,17 +1056,23 @@ sub clear {
 
 Write the in-memory archive to disk.  The first argument can either
 be the name of a file or a reference to an already open filehandle (a
-GLOB reference). If the second argument is true, the module will use
-IO::Zlib to write the file in a compressed format.  If IO::Zlib is
-not available, the C<write> method will fail and return.
+GLOB reference). 
+
+The second argument is used to indicate compression. You can either 
+compress using C<gzip> or C<bzip2>. If you pass a digit, it's assumed
+to be the C<gzip> compression level (between 1 and 9), but the use of 
+constants is prefered:
+
+  # write a gzip compressed file
+  $tar->write( 'out.tgz', COMPRESSION_GZIP );
+
+  # write a bzip compressed file  
+  $tar->write( 'out.tbz', COMPRESSION_BZIP );
 
 Note that when you pass in a filehandle, the compression argument
 is ignored, as all files are printed verbatim to your filehandle.
 If you wish to enable compression with filehandles, use an
-C<IO::Zlib> filehandle instead.
-
-Specific levels of compression can be chosen by passing the values 2
-through 9 as the second parameter.
+C<IO::Zlib> or C<IO::Compress::Bzip2> filehandle instead.
 
 The third argument is an optional prefix. All files will be tucked
 away in the directory you specify as prefix. So if you have files
@@ -1021,6 +1082,7 @@ will be written to the archive as 'foo/a' and 'foo/b'.
 If no arguments are given, C<write> returns the entire formatted
 archive as a string, which could be useful if you'd like to stuff the
 archive into a socket or a pipe to gzip or something.
+
 
 =cut
 
@@ -1435,23 +1497,27 @@ sub has_perlio { return $HAS_PERLIO; }
 
 =head1 Class Methods
 
-=head2 Archive::Tar->create_archive($file, $compression, @filelist)
+=head2 Archive::Tar->create_archive($file, $compressed, @filelist)
 
 Creates a tar file from the list of files provided.  The first
 argument can either be the name of the tar file to create or a
 reference to an open file handle (e.g. a GLOB reference).
 
-The second argument specifies the level of compression to be used, if
-any.  Compression of tar files requires the installation of the
-IO::Zlib module.  Specific levels of compression may be
-requested by passing a value between 2 and 9 as the second argument.
-Any other value evaluating as true will result in the default
-compression level being used.
+The second argument is used to indicate compression. You can either 
+compress using C<gzip> or C<bzip2>. If you pass a digit, it's assumed
+to be the C<gzip> compression level (between 1 and 9), but the use of 
+constants is prefered:
+
+  # write a gzip compressed file
+  Archive::Tar->create_archive( 'out.tgz', COMPRESSION_GZIP, @filelist );
+
+  # write a bzip compressed file  
+  Archive::Tar->create_archive( 'out.tbz', COMPRESSION_BZIP, @filelist );
 
 Note that when you pass in a filehandle, the compression argument
 is ignored, as all files are printed verbatim to your filehandle.
 If you wish to enable compression with filehandles, use an
-C<IO::Zlib> filehandle instead.
+C<IO::Zlib> or C<IO::Compress::Bzip2> filehandle instead.
 
 The remaining arguments list the files to be included in the tar file.
 These files must all exist. Any files which don't exist or can't be
@@ -1484,7 +1550,6 @@ sub create_archive {
 }
 
 =head2 Archive::Tar->iter( $filename, [ $compressed, {opt => $val} ] )
-=head2 Archive::Tar->iterator( $filename, [ $compressed, {opt => $val} ] )
 
 Returns an iterator function that reads the tar file without loading
 it all in memory.  Each time the function is called it will return the
@@ -1542,7 +1607,7 @@ sub iter {
     };
 }
 
-=head2 Archive::Tar->list_archive ($file, $compressed, [\@properties])
+=head2 Archive::Tar->list_archive($file, $compressed, [\@properties])
 
 Returns a list of the names of all the files in the archive.  The
 first argument can either be the name of the tar file to list or a
@@ -1573,7 +1638,7 @@ sub list_archive {
     return $tar->list_files( @_ );
 }
 
-=head2 Archive::Tar->extract_archive ($file, $gzip)
+=head2 Archive::Tar->extract_archive($file, $compressed)
 
 Extracts the contents of the tar file.  The first argument can either
 be the name of the tar file to create or a reference to an open file
@@ -1600,8 +1665,8 @@ sub extract_archive {
 =head2 Archive::Tar->can_handle_compressed_files
 
 A simple checking routine, which will return true if C<Archive::Tar>
-is able to uncompress compressed archives on the fly with C<IO::Zlib>,
-or false if C<IO::Zlib> is not installed.
+is able to uncompress compressed archives on the fly with C<IO::Zlib>
+and C<IO::Compress::Bzip2> or false if not both are installed.
 
 You can use this as a shortcut to determine whether C<Archive::Tar>
 will do what you think before passing compressed archives to its
@@ -1609,7 +1674,7 @@ C<read> method.
 
 =cut
 
-sub can_handle_compressed_files { return ZLIB ? 1 : 0 }
+sub can_handle_compressed_files { return ZLIB && BZIP ? 1 : 0 }
 
 sub no_string_support {
     croak("You have to install IO::String to support writing archives to strings");
@@ -1756,18 +1821,24 @@ Yes it is, see previous answer. Since C<Compress::Zlib> and therefore
 C<IO::Zlib> doesn't support C<seek> on their filehandles, there is little
 choice but to read the archive into memory.
 This is ok if you want to do in-memory manipulation of the archive.
+
 If you just want to extract, use the C<extract_archive> class method
 instead. It will optimize and write to disk immediately.
 
-=item Can't you lazy-load data instead?
+Another option is to use the C<iter> class method to iterate over
+the files in the tarball without reading them all in memory at once.
 
-No, not easily. See previous question.
+=item Can you lazy-load data instead?
+
+In some cases, yes. You can use the C<iter> class method to iterate
+over the files in the tarball without reading them all in memory at once.
 
 =item How much memory will an X kb tar file need?
 
 Probably more than X kb, since it will all be read into memory. If
 this is a problem, and you don't need to do in memory manipulation
-of the archive, consider using C</bin/tar> instead.
+of the archive, consider using the C<iter> class method, or C</bin/tar> 
+instead.
 
 =item What do you do with unsupported filetypes in an archive?
 
@@ -1777,8 +1848,9 @@ try to make a copy of the original file, rather than throwing an error.
 
 This does require you to read the entire archive in to memory first,
 since otherwise we wouldn't know what data to fill the copy with.
-(This means that you cannot use the class methods on archives that
-have incompatible filetypes and still expect things to work).
+(This means that you cannot use the class methods, including C<iter> 
+on archives that have incompatible filetypes and still expect things 
+to work).
 
 For other filetypes, like C<chardevs> and C<blockdevs> we'll warn that
 the extraction of this particular item didn't work.
