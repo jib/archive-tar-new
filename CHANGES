@@ -1,3 +1,13 @@
+* important changes in version 1.39_02 25/08/2008:
+- Address #31806: Please add support for bzipped tar files.
+  Archive::Tar now supports reading/writing tar.bz2 files.
+- Since IO::Zlib is now core, it is now a default dependency.
+- Added Package::Constants as a dependency to ease the use of A::T::Constants
+- Dependency on IO::Compress::Bzip2 and IO::Uncompress::Bunzip2 is on
+  by default, but can be negated with the -n switch when building:
+  'perl Makefile.PL -n'
+- Improve documentation on the new ->iter function
+
 * important changes in version 1.39_01 22/08/2008:
 - Address the second part mentioned in this report:
   #30380: directory traversal vulnerability in Archive-Tar
