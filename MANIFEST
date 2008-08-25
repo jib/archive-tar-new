@@ -18,7 +18,9 @@ t/src/linktest/linktest_missing_dir.tar
 t/src/linktest/linktest_with_dir.tar
 t/src/long/b
 t/src/long/bar.tar
+t/src/long/foo.tbz
 t/src/long/foo.tgz
 t/src/short/b
 t/src/short/bar.tar
+t/src/short/foo.tbz
 t/src/short/foo.tgz
