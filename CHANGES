@@ -1,3 +1,13 @@
+* important changes in verison 1.39_03 26/08/2008:
+- Because all the IO::Compress modules are interlinked, they must be 
+  the same version when installed, or breakage will occur like shown
+  at this tester report:
+    
+    http://www.nntp.perl.org/group/perl.cpan.testers/2008/08/msg2083310.html
+  
+  Mailed the author to find a less fragile solution, but for now we require
+  all the individual modules, and all at the same version.
+
 * important changes in version 1.39_02 25/08/2008:
 - Address #31806: Please add support for bzipped tar files.
   Archive::Tar now supports reading/writing tar.bz2 files.
