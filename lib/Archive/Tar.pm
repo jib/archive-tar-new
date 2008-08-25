@@ -1574,8 +1574,6 @@ Example usage:
 
 =cut
 
-### alias
-*iterator = *iter;
 
 sub iter {
     my $class       = shift;
