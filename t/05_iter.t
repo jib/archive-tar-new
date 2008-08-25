@@ -39,7 +39,7 @@ for my $index ( \0, 0 .. $#Expect ) {
         @expect         = @Expect;
     }        
 
-    my $next = $Class->iterator( $File, 0, \%opts );
+    my $next = $Class->iter( $File, 0, \%opts );
     
     my $pp_opts = join " => ", %opts;
     ok( $next,                  "Iterator created from $File ($pp_opts)" );
