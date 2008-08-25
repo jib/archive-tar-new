@@ -25,13 +25,19 @@ if( !$opt->{d} and not eval { require Text::Diff; 1 } ) {
 }            
 
 my $prereqs = {
-    'Test::More'            => 0, 
-    'Package::Constants'    => 0,
-    'File::Spec'            => 0.82,
-    'Test::Harness'         => 2.26,    # bug in older versions
-    'IO::Zlib'              => 1.01,    # the most recent, not modified since 2001
-    'IO::Compress::Bzip2'   => 2.012,   # bzip2 support
+    'Test::More'                    => 0, 
+    'Package::Constants'            => 0,
+    'File::Spec'                    => 0.82,
+    'Test::Harness'                 => 2.26,    # bug in older versions
+    'IO::Zlib'                      => 1.01,    
+    # All these should be the same version, or breakage may occurr. See:
+    # http://www.nntp.perl.org/group/perl.cpan.testers/2008/08/msg2083310.html
+    'IO::Compress::Base'            => 2.012,   # base class
+    'Compress::Zlib'                => 2.012,   # zlib
+    'IO::Compress::Gzip'            => 2.012,   # c::z needs this
+    'IO::Compress::Bzip2'           => 2.012,   # bzip2 support
 };
+                                                
 
 unless ($Config{useperlio}) {
     $prereqs->{'IO::String'} = 0;       # for better 'return stringified archive'
