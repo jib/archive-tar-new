@@ -434,10 +434,17 @@ sub _read_tar {
             undef $real_name;
         }
 
+        ### skip this entry if we're filtering
         if ($filter && $entry->name !~ $filter) {
             next LOOP;
+        
+        ### skip this entry if it's a pax header. This is a special file added
+        ### by, among others, git-generated tarballs. It holds comments and is
+        ### not meant for extracting. See #38932: pax_global_header extracted 
+        } elsif ( $entry->name eq PAX_HEADER ) {
+            next LOOP;
         }
-
+        
         $self->_extract_file( $entry ) if $extract
                                             && !$entry->is_longlink
                                             && !$entry->is_unknown

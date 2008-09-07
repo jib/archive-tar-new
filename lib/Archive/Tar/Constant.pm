@@ -60,6 +60,7 @@ use constant TIME_OFFSET    => ($^O eq "MacOS") ? Time::Local::timelocal(0,0,0,1
 use constant MAGIC          => "ustar";
 use constant TAR_VERSION    => "00";
 use constant LONGLINK_NAME  => '././@LongLink';
+use constant PAX_HEADER     => 'pax_global_header';
 
                             ### allow ZLIB to be turned off using ENV: DEBUG only
 use constant ZLIB           => do { !$ENV{'PERL5_AT_NO_ZLIB'} and
