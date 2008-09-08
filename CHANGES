@@ -1,3 +1,11 @@
+* important changes in version 1.39_04 08/09/2008:
+- Address: #38932: pax_global_header extracted as file
+  Don't extract these special files, which are added by, among
+  others, git-generated tarballs. It holds a comment and is not
+  meant for extraction. This follows gnu tar 1.14 and later behaviour
+- Address: #19577: extract_file() drops volume part of extraction path
+  Windows users can now extract files to a different volume
+
 * important changes in verison 1.39_03 26/08/2008:
 - Because all the IO::Compress modules are interlinked, they must be 
   the same version when installed, or breakage will occur like shown
