@@ -617,7 +617,7 @@ sub _extract_file {
 
     my $dir;
     ### is $name an absolute path? ###
-    if( File::Spec->file_name_is_absolute( $dirs ) ) {
+    if( $vol || File::Spec->file_name_is_absolute( $dirs ) ) {
 
         ### absolute names are not allowed to be in tarballs under
         ### strict mode, so only allow it if a user tells us to do it
@@ -630,7 +630,7 @@ sub _extract_file {
         }
         
         ### user asked us to, it's fine.
-        $dir = $dirs;
+        $dir = File::Spec->catpath( $vol, $dirs, "" );
 
     ### it's a relative path ###
     } else {
