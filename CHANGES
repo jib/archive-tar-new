@@ -1,3 +1,8 @@
+* important changes in version 1.40 13/10/2008:
+- Add $class->has_zlib_support and $class->has_bzip2_support to
+  discern which A::T can support
+- Address: #39933: [PATCH] handle ../ directory name on VMS (core patch)
+
 * important changes in version 1.39_04 08/09/2008:
 - Address: #38932: pax_global_header extracted as file
   Don't extract these special files, which are added by, among
