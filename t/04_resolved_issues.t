@@ -113,7 +113,7 @@ use_ok( $FileClass );
     ### absolute paths are already taken care of. Only relative paths
     ### matter
     my $in_file     = basename($0);
-    my $out_file    = '../' . $in_file . ".$$";
+    my $out_file    = '../' . $in_file . "_$$";
     
     ok( $tar->add_files( $in_file ), 
                                 "       Added '$in_file'" );
