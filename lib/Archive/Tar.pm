@@ -690,9 +690,9 @@ sub _extract_file {
         }
 
         
-        ### '.' is the directory delimiter, of which the first one has to
-        ### be escaped/changed.
-        map tr/\./_/, @dirs if ON_VMS;        
+        ### '.' is the directory delimiter, so make it an underscore
+        ### except for the special case of C<../>.
+        map $_ ne '..' && tr/\./_/, @dirs if ON_VMS;        
 
         my ($cwd_vol,$cwd_dir,$cwd_file) 
                     = File::Spec->splitpath( $cwd );
