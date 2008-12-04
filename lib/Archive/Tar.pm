@@ -1297,6 +1297,10 @@ I<Stuffit Expander> on MacOS.
 Be aware that the file's type/creator and resource fork will be lost,
 which is usually what you want in cross-platform archives.
 
+Instead of a filename, you can also pass it an existing C<Archive::Tar::File>
+object from, for example, another archive. The object will be clone, and
+effectively be a copy of the original, not an alias.
+
 Returns a list of C<Archive::Tar::File> objects that were just added.
 
 =cut
@@ -1307,6 +1311,15 @@ sub add_files {
 
     my @rv;
     for my $file ( @files ) {
+
+        ### you passed an Archive::Tar::File object
+        ### clone it so we don't accidentally have a reference to
+        ### an object from another archive
+        if( UNIVERSAL::isa( $file,'Archive::Tar::File' ) ) {
+            push @rv, $file->clone; 
+            next;
+        }
+    
         unless( -e $file || -l $file ) {
             $self->_error( qq[No such file: '$file'] );
             next;
