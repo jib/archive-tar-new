@@ -689,9 +689,11 @@ sub _extract_file {
             }
         }
 
-        ### '.' is the directory delimiter on VMS, of which the first one
-        ### has to be escaped/changed by vmspath
-        map { $_ = VMS::Filespec::vmspath($_) } @dirs if ON_VMS;        
+        ### '.' is the directory delimiter on VMS, which has to be escaped
+        ### or changed to '_' on vms.  vmsify is used, because older versions
+        ### of vmspath do not handle this properly.
+        ### Must not add a '/' to an empty directory though.
+        map { length() ? VMS::Filespec::vmsify($_.'/') : $_ } @dirs if ON_VMS;        
 
         my ($cwd_vol,$cwd_dir,$cwd_file) 
                     = File::Spec->splitpath( $cwd );
@@ -713,7 +715,8 @@ sub _extract_file {
                             $cwd_vol, File::Spec->catdir( @cwd, @dirs ), '' 
                         );
 
-        ### catdir() returns undef if the path is longer than 255 chars on VMS
+        ### catdir() returns undef if the path is longer than 255 chars on 
+        ### older VMS systems.
         unless ( defined $dir ) {
             $^W && $self->_error( qq[Could not compose a path for '$dirs'\n] );
             return;
