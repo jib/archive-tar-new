@@ -1,3 +1,12 @@
+* important changes in version 1.42 13/12/2008:
+- Address #40426: Archive Tar to support direct Archive::Tar::File adds
+  It is now possible to add Archive::Tar::File objects via $tar->add_files
+- Address #40016 (Archive::Tar assumes $> won't change): CAN_CHOWN is now a
+  dynamic check upon extraction. This allows scripts to drop privileges when
+  desired
+- Address take 2 of #39933: [PATCH] handle ../ directory name on VMS
+  John M. sent in a better way to do directory name translation.
+ 
 * important changes in version 1.40 13/10/2008:
 - Add $class->has_zlib_support and $class->has_bzip2_support to
   discern which A::T can support
