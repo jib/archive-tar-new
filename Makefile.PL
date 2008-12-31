@@ -11,7 +11,7 @@ unless( $] >= 5.005_03 ) {
 
 if( !eval { require IO::Compress::Bzip2; 1 } and !$opt->{n} ) {
     warn    qq[You do not have IO::Compress::Bzip2 installed. This means you can ].
-            qq[not read or write compressed archive!\n] .
+            qq[not read or write bzip2 compressed archives!\n] .
             qq[Note: you can disable this warning (and the prerequisite) ].
             qq[by invoking Makefile.PL with '-n'\n];
 }
@@ -22,14 +22,14 @@ if( !$opt->{d} and not eval { require Text::Diff; 1 } ) {
             qq[utility requires you to have Text::Diff installed.\n\n].
             qq[To add Text::Diff as a prerequisite, please supply the ].
             qq['-d' option when invoking this Makefile.PL.\n\n];
-}            
+}
 
 my $prereqs = {
-    'Test::More'                    => 0, 
+    'Test::More'                    => 0,
     'Package::Constants'            => 0,
     'File::Spec'                    => 0.82,
     'Test::Harness'                 => 2.26,    # bug in older versions
-    'IO::Zlib'                      => 1.01,    
+    'IO::Zlib'                      => 1.01,
     # All these should be the same version, or breakage may occurr. See:
     # http://www.nntp.perl.org/group/perl.cpan.testers/2008/08/msg2083310.html
     'IO::Compress::Base'            => 2.012,   # base class
@@ -37,7 +37,7 @@ my $prereqs = {
     'IO::Compress::Gzip'            => 2.012,   # c::z needs this
     'IO::Compress::Bzip2'           => 2.012,   # bzip2 support
 };
-                                                
+
 
 unless ($Config{useperlio}) {
     $prereqs->{'IO::String'} = 0;       # for better 'return stringified archive'
@@ -48,7 +48,7 @@ delete $prereqs->{'IO::Compress::Bzip2'} if $opt->{n};
 
 ### so you want text::diff ###
 $prereqs->{'Text::Diff'} = 0 if $opt->{d};
-    
+
 
 WriteMakefile (
     NAME            => 'Archive::Tar',
@@ -59,4 +59,4 @@ WriteMakefile (
     INSTALLDIRS     => ( $] >= 5.009003 ? 'perl' : 'site' ),
     AUTHOR          => 'Jos Boumans <kane[at]cpan.org>',
 	ABSTRACT        => 'Manipulates TAR archives'
-);             
+);
