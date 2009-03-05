@@ -1,3 +1,8 @@
+* important changes in version 1.44 19/01/2009:
+- Address #41798: Nonempty $\ when writing a Tar file produces a
+  corrupt Tar file 	
+- Textual fix to Makefile.PL diagnostics
+
 * important changes in version 1.42 13/12/2008:
 - Address #40426: Archive Tar to support direct Archive::Tar::File adds
   It is now possible to add Archive::Tar::File objects via $tar->add_files
