@@ -14,6 +14,7 @@ t/04_resolved_issues.t
 t/05_iter.t
 t/90_symlink.t
 t/99_pod.t
+t/src/header/signed.tar
 t/src/linktest/linktest_missing_dir.tar
 t/src/linktest/linktest_with_dir.tar
 t/src/long/b
