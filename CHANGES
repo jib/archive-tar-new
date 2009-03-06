@@ -1,3 +1,10 @@
+* important changes in version 1.46 05/03/2009:
+- Address: bug #43513: [PATCH] Accept wrong checksums from SunOS and HP-UX tar
+  like GNU tar does. See here for details:
+  http://www.gnu.org/software/tar/manual/tar.html#SEC139
+- make COMPRESS_BZIP and COMPRESS_GZIP constants actually work and fix their
+  documentation
+
 * important changes in version 1.44 19/01/2009:
 - Address #41798: Nonempty $\ when writing a Tar file produces a
   corrupt Tar file 	

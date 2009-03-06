@@ -27,11 +27,11 @@ use vars qw[$DEBUG $error $VERSION $WARN $FOLLOW_SYMLINK $CHOWN $CHMOD
          ];
 
 @ISA                    = qw[Exporter];
-@EXPORT                 = qw[ COMPRESS_GZIP, COMPRESS_BZIP ];
+@EXPORT                 = qw[ COMPRESS_GZIP COMPRESS_BZIP ];
 $DEBUG                  = 0;
 $WARN                   = 1;
 $FOLLOW_SYMLINK         = 0;
-$VERSION                = "1.44";
+$VERSION                = "1.46";
 $CHOWN                  = 1;
 $CHMOD                  = 1;
 $DO_NOT_USE_PREFIX      = 0;
