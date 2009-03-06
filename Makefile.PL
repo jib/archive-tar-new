@@ -32,10 +32,12 @@ my $prereqs = {
     'IO::Zlib'                      => 1.01,
     # All these should be the same version, or breakage may occurr. See:
     # http://www.nntp.perl.org/group/perl.cpan.testers/2008/08/msg2083310.html
-    'IO::Compress::Base'            => 2.012,   # base class
-    'Compress::Zlib'                => 2.012,   # zlib
-    'IO::Compress::Gzip'            => 2.012,   # c::z needs this
-    'IO::Compress::Bzip2'           => 2.012,   # bzip2 support
+    # Requires at least 2.015, to address: #43609: Memory problem with A::T.
+    # Turns out 2.012 was leaking memory.
+    'IO::Compress::Base'            => 2.015,   # base class
+    'Compress::Zlib'                => 2.015,   # zlib
+    'IO::Compress::Gzip'            => 2.015,   # c::z needs this
+    'IO::Compress::Bzip2'           => 2.015,   # bzip2 support
 };
 
 
