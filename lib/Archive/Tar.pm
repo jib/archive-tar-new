@@ -323,6 +323,13 @@ sub _read_tar {
                 $self->_error( qq[Cannot read compressed format in tar-mode] );
                 return;
             }
+            
+            ### size is < HEAD, which means a corrupted file, as the minimum
+            ### length is _at least_ HEAD
+            if (length $chunk != HEAD) {
+                $self->_error( qq[Cannot read enough bytes from the tarfile] );
+                return;
+            }
         }
 
         ### if we can't read in all bytes... ###
