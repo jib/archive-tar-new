@@ -1,3 +1,9 @@
+* important changes in version 1.48 20/04/2009:
+- Address #44680 (Improve error reporting on short corrupted archives)
+  Archives of less than 512 bytes would not have a clear error string set
+- Requires at least IO::Compres::* 2.015, to address: #43609: Memory 
+  problem with A::T. Turns out 2.012 was leaking memory.
+
 * important changes in version 1.46 05/03/2009:
 - Address: bug #43513: [PATCH] Accept wrong checksums from SunOS and HP-UX tar
   like GNU tar does. See here for details:
