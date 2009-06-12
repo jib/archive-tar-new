@@ -1,3 +1,8 @@
+* important changes in version 1.50 12/06/2009:
+- Apply patch in #46450: Support for --no-same-permissions style behavior
+  This facilitates leaving the +x bit, while still applying your umask on
+  the extracted file. 
+
 * important changes in version 1.48 20/04/2009:
 - Address #44680 (Improve error reporting on short corrupted archives)
   Archives of less than 512 bytes would not have a clear error string set
