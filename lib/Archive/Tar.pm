@@ -1561,7 +1561,7 @@ Returns an iterator function that reads the tar file without loading
 it all in memory.  Each time the function is called it will return the
 next file in the tarball. The files are returned as
 C<Archive::Tar::File> objects. The iterator function returns the
-empty list once it has exhausted the the files contained.
+empty list once it has exhausted the files contained.
 
 The second argument can be a hash reference with options, which are
 identical to the arguments passed to C<read()>.
