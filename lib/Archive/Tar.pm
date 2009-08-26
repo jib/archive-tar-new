@@ -1600,7 +1600,8 @@ sub iter {
         return                  unless $handle; # handle exhausted?
 
         ### read data, should only return file
-        @data = @{ $class->_read_tar($handle, { %$opts, limit => 1 }) };
+        my $tarfile = $class->_read_tar($handle, { %$opts, limit => 1 });
+        @data = @$tarfile if ref $tarfile && ref $tarfile eq 'ARRAY';
 
         ### return one piece of data
         return shift(@data)     if @data;
