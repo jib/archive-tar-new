@@ -1,3 +1,18 @@
+* important changes in version 1.54 10/09/2009
+- Apply a patch from Niko Tyni (ntyni@debian.org) that resolves RT #48879;
+
+    As seen in [rt.cpan.org #48879], although the recommended way of
+    retrieving the last error is to use an instance method ($tar->error),
+    the returned value is effectively global: an error in one Archive::Tar
+    instance changes the error string of another instance.
+
+    This change separates the error strings from each other while keeping
+    the (deprecated) global value of $Archive::Tar::error pointing to the
+    last error regardless of its instance.
+
+    We also support calling error() as a class method (Archive::Tar->error).
+    In this case it returns the global value, which matches the old behaviour.
+
 * important changes in version 1.52 13/06/2009:
 - Apply documentation patch to describe IBM APAR issue IZ50240; AIX tar
   does not always end a Tar archive with a 0x00 null block, which can 
