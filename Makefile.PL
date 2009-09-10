@@ -52,6 +52,10 @@ delete $prereqs->{'IO::Compress::Bzip2'} if $opt->{n};
 $prereqs->{'Text::Diff'} = 0 if $opt->{d};
 
 
+my @LICENSE;
+
+push @LICENSE, 'LICENSE', 'perl' if $ExtUtils::MakeMaker::VERSION > 6.30;
+
 WriteMakefile (
     NAME            => 'Archive::Tar',
     VERSION_FROM    => 'lib/Archive/Tar.pm', # finds $VERSION
@@ -60,5 +64,6 @@ WriteMakefile (
     PREREQ_PM       => $prereqs,
     INSTALLDIRS     => ( $] >= 5.009003 ? 'perl' : 'site' ),
     AUTHOR          => 'Jos Boumans <kane[at]cpan.org>',
-	ABSTRACT        => 'Manipulates TAR archives'
+	  ABSTRACT        => 'Manipulates TAR archives',
+    @LICENSE,
 );
