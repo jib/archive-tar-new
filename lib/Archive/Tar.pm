@@ -117,7 +117,7 @@ sub new {
 
     ### copying $tmpl here since a shallow copy makes it use the
     ### same aref, causing for files to remain in memory always.
-    my $obj = bless { _data => [ ], _file => 'Unknown' }, $class;
+    my $obj = bless { _data => [ ], _file => 'Unknown', _error => '' }, $class;
 
     if (@_) {
         unless ( $obj->read( @_ ) ) {
@@ -1445,6 +1445,10 @@ method call instead.
         my $self    = shift;
         my $msg     = $error = shift;
         $longmess   = Carp::longmess($error);
+        if (ref $self) {
+            $self->{_error} = $error;
+            $self->{_longmess} = $longmess;
+        }
 
         ### set Archive::Tar::WARN to 0 to disable printing
         ### of errors
@@ -1457,7 +1461,11 @@ method call instead.
 
     sub error {
         my $self = shift;
-        return shift() ? $longmess : $error;
+        if (ref $self) {
+            return shift() ? $self->{_longmess} : $self->{_error};
+        } else {
+            return shift() ? $longmess : $error;
+        }
     }
 }
 
@@ -1817,6 +1825,11 @@ Holds the last reported error. Kept for historical reasons, but its
 use is very much discouraged. Use the C<error()> method instead:
 
     warn $tar->error unless $tar->extract;
+
+Note that in older versions of this module, the C<error()> method
+would return an effectively global value even when called an instance
+method as above. This has since been fixed, and multiple instances of
+C<Archive::Tar> now have separate error strings.
 
 =head2 $Archive::Tar::INSECURE_EXTRACT_MODE
 
