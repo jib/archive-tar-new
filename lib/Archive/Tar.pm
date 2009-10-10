@@ -369,7 +369,7 @@ sub _read_tar {
         }
 
         ### ignore labels:
-        ### http://www.gnu.org/manual/tar/html_node/tar_139.html
+        ### http://www.gnu.org/software/tar/manual/html_chapter/Media.html#SEC159
         next if $entry->is_label;
 
         if( length $entry->type and ($entry->is_file || $entry->is_longlink) ) {
