@@ -1,3 +1,15 @@
+* important changes in version 1.56 03/02/2010
+- Apply a patch from Mark Swayne that addresses RT #50471;
+
+  Archive::Tar generates file headers with space padded numbers for size,
+  mtime and checksum. This format is incompatible with some versions of
+  the busybox implementation of tar (I am using 1.13.2), which requires 0
+  padded numbers (despite comments in the source that say otherwise).
+
+  I've included a patch that adds a control flag that enables zero padded
+  numbers in the header. It passes all tests with ActiveState Perl 5.8.8
+  on WinXP.
+
 * important changes in version 1.54 10/09/2009
 - Apply a patch from Niko Tyni (ntyni@debian.org) that resolves RT #48879;
 
