@@ -31,7 +31,7 @@ use vars qw[$DEBUG $error $VERSION $WARN $FOLLOW_SYMLINK $CHOWN $CHMOD
 $DEBUG                  = 0;
 $WARN                   = 1;
 $FOLLOW_SYMLINK         = 0;
-$VERSION                = "1.56";
+$VERSION                = "1.58";
 $CHOWN                  = 1;
 $CHMOD                  = 1;
 $SAME_PERMISSIONS       = $> == 0 ? 1 : 0;
@@ -318,6 +318,7 @@ sub _read_tar {
     while( $handle->read( $chunk, HEAD ) ) {
         ### IO::Zlib doesn't support this yet
         my $offset = eval { tell $handle } || 'unknown';
+        $@ = '';
 
         unless( $read++ ) {
             my $gzip = GZIP_MAGIC_NUM;

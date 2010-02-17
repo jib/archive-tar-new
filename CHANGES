@@ -1,3 +1,13 @@
+* important changes in version 1.58 17/02/2010
+- Apply a patch from toddr@null.net that addreses RT #54714
+
+  Subject: $@ not cleaned up after eval
+
+  This section of code seems to be trying to use future functionality 
+  not yet present in IO::Zlib (tell). I was chasing another bug and getting very confused
+  by this population of $@. Could I request you cleanup $@ if you expect and/or don't care
+  about failure from this eval?
+
 * important changes in version 1.56 03/02/2010
 - Apply a patch from Mark Swayne that addresses RT #50471;
 
