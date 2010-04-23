@@ -1,3 +1,22 @@
+* important changes in version 1.60 23/04/2010
+- Apply patch from Darrell K. [RT #54850] that makes write() and create_archive() close only handles
+  they opened.
+
+    When you pass a filehandle to Archive::Tar::write() or create_archive(),
+    it closes the filehandle after writing to it. I think it makes more
+    sense not to close a handle that A::T didn't open, since the application
+    may need to write additional data to it. (Consider sockets, package
+    files containing encapsulated tar archives, etc.)
+
+    Example:
+
+    $ perl -e 'use Archive::Tar; open(PKG, ">mypkg") or die "open: $!"; my
+    $tar = Archive::Tar->new; $tar->add_data("foo.txt","hello");
+    $tar->write(\*PKG); print PKG "more data" or die "print: $!";'
+    print: Bad file descriptor at -e line 1.
+
+- Fool the installer into replacing our scripts that were installed by core with versiononly set.
+
 * important changes in version 1.58 17/02/2010
 - Apply a patch from toddr@null.net that addreses RT #54714
 
