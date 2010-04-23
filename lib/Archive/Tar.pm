@@ -1244,8 +1244,8 @@ sub write {
                         : $HAS_PERLIO ? $dummy
                         : do { seek $handle, 0, 0; local $/; <$handle> };
 
-    ### make sure to close the handle;
-    close $handle;
+    ### make sure to close the handle if we created it
+    close $handle unless ref($file);
 
     return $rv;
 }
