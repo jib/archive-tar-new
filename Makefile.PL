@@ -60,10 +60,26 @@ WriteMakefile (
     NAME            => 'Archive::Tar',
     VERSION_FROM    => 'lib/Archive/Tar.pm', # finds $VERSION
     dist            => { COMPRESS => 'gzip -9f', SUFFIX => 'gz' },
-    EXE_FILES       => ['bin/ptar', 'bin/ptardiff'],
+    #EXE_FILES       => ['bin/ptar', 'bin/ptardiff'],
+    EXE_FILES       => [ _scripts() ],
     PREREQ_PM       => $prereqs,
     INSTALLDIRS     => ( $] >= 5.009003 ? 'perl' : 'site' ),
     AUTHOR          => 'Jos Boumans <kane[at]cpan.org>',
 	  ABSTRACT        => 'Manipulates TAR archives',
     @LICENSE,
 );
+
+sub _scripts {
+  my @scripts = glob('bin/*');
+  if ( $] >= 5.009003 ) {
+    require Config;
+    my $version = sprintf("%vd",$^V);
+    if ( $Config::Config{versiononly} and
+         $Config::Config{startperl} =~ /\Q$version\E$/ ) {
+         require File::Copy;
+         File::Copy::copy( $_, "$_$version" ) for @scripts;
+         @scripts = glob("bin/*$version");
+    }
+  }
+  return @scripts;
+}
