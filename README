@@ -15,6 +15,3 @@ the IO::Zlib module to read and write gzipped tarfiles.
 Archive::Tar will still work without IO::Zlib, it will just complain 
 when you try to use a compressed archive or write one, since it 
 obviously can't. 
-
-A snapshot of the latest development version of Archive::Tar may be 
-optained at: http://p4.elixus.org/snap/Archive-Tar.tar.gz
