@@ -31,7 +31,7 @@ use vars qw[$DEBUG $error $VERSION $WARN $FOLLOW_SYMLINK $CHOWN $CHMOD
 $DEBUG                  = 0;
 $WARN                   = 1;
 $FOLLOW_SYMLINK         = 0;
-$VERSION                = "1.60";
+$VERSION                = "1.62";
 $CHOWN                  = 1;
 $CHMOD                  = 1;
 $SAME_PERMISSIONS       = $> == 0 ? 1 : 0;
@@ -455,10 +455,11 @@ sub _read_tar {
             next LOOP;
         }
 
-        $self->_extract_file( $entry ) if $extract
-                                            && !$entry->is_longlink
-                                            && !$entry->is_unknown
-                                            && !$entry->is_label;
+        if ( $extract && !$entry->is_longlink
+                      && !$entry->is_unknown
+                      && !$entry->is_label ) {
+            $self->_extract_file( $entry ) or return;
+        }
 
         ### Guard against tarfiles with garbage at the end
 	    last LOOP if $entry->name eq '';
