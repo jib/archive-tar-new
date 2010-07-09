@@ -212,10 +212,15 @@ sub read {
 sub _get_handle {
     my $self     = shift;
     my $file     = shift;   return unless defined $file;
-                            return $file if ref $file;
     my $compress = shift || 0;
     my $mode     = shift || READ_ONLY->( ZLIB ); # default to read only
 
+    ### Check if file is a file handle or IO glob
+    if ( ref $file ) {
+	return $file if eval{ *$file{IO} };
+	return $file if eval{ $file->isa(q{IO::Handle}) };
+	$file = q{}.$file;
+    }
 
     ### get a FH opened to the right class, so we can use it transparently
     ### throughout the program
@@ -1285,7 +1290,12 @@ sub write {
                         : do { seek $handle, 0, 0; local $/; <$handle> };
 
     ### make sure to close the handle if we created it
-    close $handle unless ref($file);
+    if ( $file ne $handle ) {
+	unless( close $handle ) {
+	    $self->_error( qq[Could not write tar] );
+	    return;
+	}
+    }
 
     return $rv;
 }

@@ -1,3 +1,7 @@
+* important changes in version 1.64 09/07/2010
+- Apply a patch from Daphne Pfister RT #59150
+  "Assumes all references filename are IO::Handle's instead of trying to stringify."
+
 * important changes in version 1.62 28/06/2010
 - Apply part of patch from https://bugzilla.redhat.com/attachment.cgi?id=426194
   reported by Martin Cermak in RT #58636 relating to a Redhat ticket
