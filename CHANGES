@@ -1,4 +1,7 @@
 * important changes in version 1.64 09/07/2010
+- Removed the PERL_CORE specific chdir from all the tests
+- Apply a patch from David Muir Sharnoff RT #58916, 
+  "skip files via a callback and limit memory use when skipping files"
 - Apply a patch from Daphne Pfister RT #59150
   "Assumes all references filename are IO::Handle's instead of trying to stringify."
 
