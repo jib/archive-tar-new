@@ -1,3 +1,10 @@
+* important changes in version 1.66 26/07/2010
+- Applied a patch from Alexandr Ciornii [RT#59699] to Makefile.PL which produces better META.yml
+- Apply a patch from Alexandr Ciornii to ptar [RT#59700]:
+
+    Adds option -C to allow archives created with ptar to be uploaded to
+    PAUSE in case of Windows or world +w permissions on unix.
+
 * important changes in version 1.64 09/07/2010
 - Removed the PERL_CORE specific chdir from all the tests
 - Apply a patch from David Muir Sharnoff RT #58916, 
