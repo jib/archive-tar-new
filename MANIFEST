@@ -1,5 +1,6 @@
 bin/ptar
 bin/ptardiff
+bin/ptargrep
 CHANGES
 lib/Archive/Tar.pm
 lib/Archive/Tar/Constant.pm
