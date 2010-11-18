@@ -1,3 +1,7 @@
+* important changes in version 1.72 18/11/2010
+- Apply patch from Grant McLean to update docs for
+  ptargrep
+
 * important changes in version 1.70 15/11/2010
 - Add ptargrep utility courtesy of Grant McLean
 
