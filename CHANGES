@@ -1,3 +1,7 @@
+* important changes in version 1.74 18/12/2010
+- Skip extracting pax extended headers, reported as
+  RT #64038
+
 * important changes in version 1.72 18/11/2010
 - Apply patch from Grant McLean to update docs for
   ptargrep
