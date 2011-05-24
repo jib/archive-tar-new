@@ -25,7 +25,7 @@
 
 * important changes in version 1.64 09/07/2010
 - Removed the PERL_CORE specific chdir from all the tests
-- Apply a patch from David Muir Sharnoff RT #58916, 
+- Apply a patch from David Muir Sharnoff RT #58916,
   "skip files via a callback and limit memory use when skipping files"
 - Apply a patch from Daphne Pfister RT #59150
   "Assumes all references filename are IO::Handle's instead of trying to stringify."
@@ -34,7 +34,7 @@
 - Apply part of patch from https://bugzilla.redhat.com/attachment.cgi?id=426194
   reported by Martin Cermak in RT #58636 relating to a Redhat ticket
   https://bugzilla.redhat.com/show_bug.cgi?id=606813
-    
+
 * important changes in version 1.60 23/04/2010
 - Apply patch from Darrell K. [RT #54850] that makes write() and create_archive() close only handles
   they opened.
@@ -59,7 +59,7 @@
 
   Subject: $@ not cleaned up after eval
 
-  This section of code seems to be trying to use future functionality 
+  This section of code seems to be trying to use future functionality
   not yet present in IO::Zlib (tell). I was chasing another bug and getting very confused
   by this population of $@. Could I request you cleanup $@ if you expect and/or don't care
   about failure from this eval?
@@ -93,19 +93,19 @@
 
 * important changes in version 1.52 13/06/2009:
 - Apply documentation patch to describe IBM APAR issue IZ50240; AIX tar
-  does not always end a Tar archive with a 0x00 null block, which can 
+  does not always end a Tar archive with a 0x00 null block, which can
   cause warnings from Archive::Tar.
   This is a documentation patch only, and users of 1.50 need not upgrade.
 
 * important changes in version 1.50 12/06/2009:
 - Apply patch in #46450: Support for --no-same-permissions style behavior
   This facilitates leaving the +x bit, while still applying your umask on
-  the extracted file. 
+  the extracted file.
 
 * important changes in version 1.48 20/04/2009:
 - Address #44680 (Improve error reporting on short corrupted archives)
   Archives of less than 512 bytes would not have a clear error string set
-- Requires at least IO::Compres::* 2.015, to address: #43609: Memory 
+- Requires at least IO::Compres::* 2.015, to address: #43609: Memory
   problem with A::T. Turns out 2.012 was leaking memory.
 
 * important changes in version 1.46 05/03/2009:
@@ -117,7 +117,7 @@
 
 * important changes in version 1.44 19/01/2009:
 - Address #41798: Nonempty $\ when writing a Tar file produces a
-  corrupt Tar file 	
+  corrupt Tar file
 - Textual fix to Makefile.PL diagnostics
 
 * important changes in version 1.42 13/12/2008:
@@ -128,7 +128,7 @@
   desired
 - Address take 2 of #39933: [PATCH] handle ../ directory name on VMS
   John M. sent in a better way to do directory name translation.
- 
+
 * important changes in version 1.40 13/10/2008:
 - Add $class->has_zlib_support and $class->has_bzip2_support to
   discern which A::T can support
@@ -143,12 +143,12 @@
   Windows users can now extract files to a different volume
 
 * important changes in verison 1.39_03 26/08/2008:
-- Because all the IO::Compress modules are interlinked, they must be 
+- Because all the IO::Compress modules are interlinked, they must be
   the same version when installed, or breakage will occur like shown
   at this tester report:
-    
+
     http://www.nntp.perl.org/group/perl.cpan.testers/2008/08/msg2083310.html
-  
+
   Mailed the author to find a less fragile solution, but for now we require
   all the individual modules, and all at the same version.
 
@@ -194,9 +194,9 @@ _ Address #30380: directory traversal vulnerability in Archive-Tar
 
 * important changes in version 1.34 15/8/2007:
 -   Address #28687: Fwd: Unespected reaction of Archive::Tar
-    A::T didn't always handle filenames that evaluated to false 
-    (like '0') gracefully. This patch adds a few 'or defined' check 
-    to the A::T codebase and a test to ensure filenames like '0' are 
+    A::T didn't always handle filenames that evaluated to false
+    (like '0') gracefully. This patch adds a few 'or defined' check
+    to the A::T codebase and a test to ensure filenames like '0' are
     handeled correctly.
 -   Apply #28407: Unicode and Archive::Tar - documentation patch as
 	FAQ patch
@@ -206,34 +206,34 @@ _ Address #30380: directory traversal vulnerability in Archive-Tar
     FAQ patch
 -   Following a report from rgs that A::T 1.31 doesn't play nicely
     with -Dmksymlinks under perl core, rewrite the symlink logic in
-    A::T::File->new to continue building an object when reading a 
-    symlink fails, rather than refusing to read on a symlink (which 
+    A::T::File->new to continue building an object when reading a
+    symlink fails, rather than refusing to read on a symlink (which
     is obviously wrong)
 -   Quell warnings when a gid is not resolvable to a group name
 
 * important changes in version 1.31 18/5/2007:
--   No longer use the t/setup.t and t/cleanup.t files but just bundle 
-    the binary files; this was done for core integration, but the new 
+-   No longer use the t/setup.t and t/cleanup.t files but just bundle
+    the binary files; this was done for core integration, but the new
     uupacktool.pl script means we dont have to do this anymore
 _   Apply core perl Change 30997 by rgs@stcosmo on 2007/04/20 15:03:57
 -   Address: #27124: Unneeded warning sent when checking for file
-    inclusion contains_file() will no longer warn to STDERR when a file 
+    inclusion contains_file() will no longer warn to STDERR when a file
     is not contained in an archive and $WARN is set to 'true'.
--   Address #26492: Dangling symlinks not preserved: Archive::Tar used 
-    to complain about dangling symlinks, unlike standard gnu tar, which 
-    would add them silently. This patch brings A::T's behaviour in line 
+-   Address #26492: Dangling symlinks not preserved: Archive::Tar used
+    to complain about dangling symlinks, unlike standard gnu tar, which
+    would add them silently. This patch brings A::T's behaviour in line
     with gnu tar
 -   Minor pod fixes
 
 * important changes in version 1.30 8/2/2006:
--   applied bleadperl patch: Subject: Change 27416: 
+-   applied bleadperl patch: Subject: Change 27416:
     Cleanup Archive-Tar temporary test files
 -   address #17985: INSTALLDIRS needs to be 'perl' for >= perl-5.9.3
--   address #18296: Archive::Tar 1.29 PATCH for VMS to fix test case 
+-   address #18296: Archive::Tar 1.29 PATCH for VMS to fix test case
     failure in 99_pod.t
     (it's actually a File::Find bug, but this patch works around that)
 -   address: #18720 ([PATCH] Archive::Tar creates POSIX style tar files
-    unnecessarily and by default, leading to compatibility problems 
+    unnecessarily and by default, leading to compatibility problems
     particularly with WinZip.)
     patch rejected, docpatch added with FAQ and SEE ALSO
 -   apply performance patch from #20399 to enable the user to
@@ -242,23 +242,23 @@ _   Apply core perl Change 30997 by rgs@stcosmo on 2007/04/20 15:03:57
 * important changes in version 1.29 3/1/2006:
 -   integrate bleadperl patches to generate the source files for
     testing, rather than bundling them
--   make extract* methods accept a::t::file objects too    
+-   make extract* methods accept a::t::file objects too
 -   address #17624: Unnecessary calls to cwd() -- cwd() is only
     called when needed
--   address #17935: Archive::Tar::write('file_name') should close 
+-   address #17935: Archive::Tar::write('file_name') should close
     or return file handle. -- filehandles are now closed
--   address #17395: [PATCH] allow extract() to select files by 
+-   address #17395: [PATCH] allow extract() to select files by
     regexes or substrings; patch did not get integrated, but a FAQ
     on how to achieve this was added to the FAQ section
--   address #17310 (Archive-Tar 1.26_01 not tolerant to Archives 
-    with Garbage) -- Garbage protection should be much improved now   
+-   address #17310 (Archive-Tar 1.26_01 not tolerant to Archives
+    with Garbage) -- Garbage protection should be much improved now
 
 * important changes in version 1.28 19/1/2006:
 -   add pod to ptar and ptardiff so they have manpages generated
 -   integrate change 25333 by rgs@oregon on 2005/08/27 16:28:27
     which fixes a failure in Archive::Tar tests when perl is built
     with -Dmksymlinks
--   integrate Change 26870 by craigb@craigb-brianor on 
+-   integrate Change 26870 by craigb@craigb-brianor on
     2006/01/17 04:03:01 holding vms specific patches
 -   mention 'full_name' as property type to list_archive
 -   address #14922 -- unable to reproduce, but add a test
@@ -268,7 +268,7 @@ _   Apply core perl Change 30997 by rgs@stcosmo on 2007/04/20 15:03:57
 -   document our lack of support for stringified archives and
     compressed archives opened to a non-io-zlib fh
 -   1.27 was skipped due to PAUSE issues
-    
+
 * important changes in version 1.26 22/8/2005:
 -   the 'ptardiff' was not included in the exe_files section
     of the makefile.pl, meaning it didn't get instaleld by default.
@@ -305,14 +305,14 @@ This release holds only bugfixes.
 This release holds only bugfixes.
 -   Make the size of symlinks be 0 in tar headers, so the next entry
     is not interpreted as contents of the symlink (bug #7937)
--   Strip high bits from the mode of the file, as they are stored 
+-   Strip high bits from the mode of the file, as they are stored
     differently in the tar header
 -   Make Archive::Tar be kinder to archives that contain garbage,
     proceeding anyway as long as that's possible.
 
 * important changes in version 1.20 8/11/2004:
 
-This release holds mostly bugfixes, in the form of a rewrite of 
+This release holds mostly bugfixes, in the form of a rewrite of
 the handling of the 'prefix' header field.
 -   Rewrote 02_methods.t to be more independant
 -   Rewrote the way 'prefix' headers are dealt with
@@ -331,8 +331,8 @@ This release holds some bugfixes and also the return of bin/ptar
     a read() failure.
 -   Re-adds bin/ptar, which disappeared from this distribution after
     0.22 (sorry about that).
--   Makes 'IO::Zlib' a default prerequisite. You can still disable 
-    this by supplying the -n option to 'perl Makefile.PL'.    
+-   Makes 'IO::Zlib' a default prerequisite. You can still disable
+    this by supplying the -n option to 'perl Makefile.PL'.
 
 * important changes in version 1.08 5/1/2004:
 
@@ -355,10 +355,10 @@ This release holds some bugfixes and new features over the 1.05 release.
 -   The chown() code somehow didn't make it into the 1.05 release
 -   Patch _get_handle() to treat all IO::File handles as binary.
     This should make win32 users happy
-    
+
 New feature added:
 -   A method called 'contains_file' that will tell you if a certain file
-    is already in the archive.    
+    is already in the archive.
 
 * important changes in version 1.05 23/8/2003:
 
@@ -366,7 +366,7 @@ This release holds some bugfixes and new features over the 1.04 release.
 -   The Test::Harness that came with perl 5.6.0 was buggy, require
     a higher version in the Makefile.PL
 -   Add a global variable $CHOWN that controls whether Archive::Tar
-    should attempt to chown() files or not when it can.    
+    should attempt to chown() files or not when it can.
 
 * important changes in version 1.04 27/7/2003:
 
@@ -398,7 +398,7 @@ Also, some new features are added:
 This release holds some bugfixes over the 1.00 release, mainly these:
 
 -   Silence some warnings when writing directories to disk.
--   A { } inside a map was interpreted as a block rather than a hashref 
+-   A { } inside a map was interpreted as a block rather than a hashref
     constructor -- now fixed.
 -   Fix write() to work again as advertised when passed no arguments.
 -   This also means glob support to write is now definitely not
@@ -414,7 +414,7 @@ Some new features/changes:
 * important changes in version 1.00 31/5/2003:
 
 This release marks the new development track as 'stable'. Version got
-upped to '1.00'. Not many changes, merely lots of successful test 
+upped to '1.00'. Not many changes, merely lots of successful test
 reports constitute this version. However, a tiny fix regarding the
 reserved string 'VERSION' has been applied, as well as a few more FAQ
 entries have been added.
@@ -438,7 +438,7 @@ Make Archive::Tar work happily on perl 5.005_03
 
 This release only has bug fixes on 0.99_02.
 
-Fixed handling of long file names when extracting with 
+Fixed handling of long file names when extracting with
 C<extract_archive>
 
 Fixed handling of prefixes in tar headers that contain regex meta-
@@ -466,20 +466,20 @@ really be files and refuse to package them.
 
 * important changes in version 0.99_01 16/3/2003:
 
-Total rewrite from the ground up. Removed as many as the nasty 
-bits (no pun intended) as possible and tucked them away. 
+Total rewrite from the ground up. Removed as many as the nasty
+bits (no pun intended) as possible and tucked them away.
 No code from the old distribution remains.
 
-Cleaned up the API, introduced clean error handling and just 
+Cleaned up the API, introduced clean error handling and just
 generally removed a lot of cruft.
 
-Note that Archive::Tar now requires perl version 5.005_03 or higher 
+Note that Archive::Tar now requires perl version 5.005_03 or higher
 to run.
 
 Introduced 2 new submodules:
 Archive::Tar::Constant
     Simply holds all constants, like block length, tar headers etc
-    
+
 Archive::Tar::File
     Object class for all files in a tar archive, to make for easier
     manipulataion of the archive in-memory.

@@ -12,6 +12,6 @@ make install
 
 This module uses no C-coded parts in itself, but it will try to use
 the IO::Zlib module to read and write gzipped tarfiles.
-Archive::Tar will still work without IO::Zlib, it will just complain 
-when you try to use a compressed archive or write one, since it 
-obviously can't. 
+Archive::Tar will still work without IO::Zlib, it will just complain
+when you try to use a compressed archive or write one, since it
+obviously can't.
