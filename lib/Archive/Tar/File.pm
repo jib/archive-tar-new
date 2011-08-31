@@ -587,6 +587,32 @@ sub rename {
 	return 1;
 }
 
+=head2 $bool = $file->chown( $user [, $group])
+
+Change owner of $file to $user. If a $group is given that is changed
+as well. You can also pass a single parameter with a colon separating the
+use and group as in 'root:wheel'.
+
+Returns true on success and false on failure.
+
+=cut
+
+sub chown {
+    my $self = shift;
+    my $uname = shift;
+    return unless defined $uname;
+    my $gname;
+    if (-1 != index($uname, ':')) {
+	($uname, $gname) = split(/:/, $uname);
+    } else {
+	$gname = shift if @_ > 0;
+    }
+
+    $self->uname( $uname );
+    $self->gname( $gname ) if $gname;
+	return 1;
+}
+
 =head1 Convenience methods
 
 To quickly check the type of a C<Archive::Tar::File> object, you can

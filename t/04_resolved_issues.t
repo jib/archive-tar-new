@@ -110,6 +110,12 @@ use_ok( $FileClass );
 
     ok( $tar->add_files( $in_file ),
                                 "       Added '$in_file'" );
+    ok( $tar->chown( $in_file, 'root' ),
+                                "       chown to root" );
+
+    ok( $tar->chown( $in_file, 'root', 'root' ),
+                                "       chown to root:root" );
+
     ok( $tar->rename( $in_file, $out_file ),
                                 "       Renamed to '$out_file'" );
 

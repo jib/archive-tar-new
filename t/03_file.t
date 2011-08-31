@@ -1,5 +1,4 @@
 ### This program tests Archive::Tar::File ###
-
 use Test::More 'no_plan';
 use strict;
 
@@ -100,6 +99,11 @@ for my $f ( @test_files ) {
     ok( $obj->get_content eq $contents,          "   get_content ok" );
 
     ok( $obj->rename( $rename_path ),            "   rename ok" );
+    ok( $obj->chown( 'root' ),                   "   chown 1 arg ok" );
+    is( $obj->uname,    'root',                  "   chown to root ok" );
+    ok( $obj->chown( 'rocky', 'perl'),           "   chown 2 args ok" );
+    is( $obj->uname,    'rocky',                 "   chown to rocky ok" );
+    is( $obj->gname,    'perl',                  "   chown to rocky:perl ok" );
     is( $obj->name,     $rename_file,            "   name '$file' ok" );
     is( $obj->prefix,   $rename_dir,             "   prefix '$dir' ok" );
     ok( $obj->rename( $unix_path ),              "   rename ok" );
