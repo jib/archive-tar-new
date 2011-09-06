@@ -57,7 +57,7 @@ WriteMakefile1(
     MIN_PERL_VERSION => '5.00503',
     META_MERGE => {
         resources => {
-            repository => 'http://oss.dwim.org/archive-tar-new',
+            repository => 'https://github.com/jib/archive-tar-new',
         },
     },
     #BUILD_REQUIRES => {
