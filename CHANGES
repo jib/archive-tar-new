@@ -1,3 +1,7 @@
+* important changes in version 1.78 08/09/2011
+- patch from Rocky Bernstein to add chown() method [rt#70623]
+- blead patch from Alexandr Ciornii to resolve [perl#78708]
+
 * important changes in version 1.76 07/01/2011
 - upstream blead patches from Peter Acklam
 
