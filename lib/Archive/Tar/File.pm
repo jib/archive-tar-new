@@ -587,6 +587,22 @@ sub rename {
 	return 1;
 }
 
+=head2 $bool = $file->chmod $mode)
+
+Change mode of $file to $mode. The mode can be a string or a number
+which is interpreted as octal whether or not a leading 0 is given.
+
+Returns true on success and false on failure.
+
+=cut
+
+sub chmod {
+    my $self  = shift;
+    my $mode = shift; return unless defined $mode && $mode =~ /^[0-7]{1,4}$/;
+    $self->{mode} = oct($mode);
+    return 1;
+}
+
 =head2 $bool = $file->chown( $user [, $group])
 
 Change owner of $file to $user. If a $group is given that is changed
