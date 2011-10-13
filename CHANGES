@@ -1,3 +1,6 @@
+* important changes in version 1.80 13/10/2011
+- patch from Rocky Bernstein to add file chown() method [rt#71221]
+
 * important changes in version 1.78 08/09/2011
 - patch from Rocky Bernstein to add chown() method [rt#70623]
 - blead patch from Alexandr Ciornii to resolve [perl#78708]
