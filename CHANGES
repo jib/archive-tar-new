@@ -1,3 +1,7 @@
+* important changes in version 1.81 21/11/2011 (CDRAKE)
+- Adjustments to handle files >8gb (>0777777777777 octal)
+- Feature to return the MD5SUM of files in the archive
+
 * important changes in version 1.80 13/10/2011
 - patch from Rocky Bernstein to add file chown() method [rt#71221]
 
