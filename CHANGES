@@ -1,3 +1,8 @@
+* important changes in version 1.84 02/03/2012 (HMBRAND)
+- ptar now supports -T option [rt#75473]
+- ptar now supports dashless options [rt#75475]
+- auto-encode filenames marked as UTF-8 [rt#75474]
+
 * important changes in version 1.82 21/11/2011 (CDRAKE)
 - Adjustments to handle files >8gb (>0777777777777 octal)
 - Feature to return the MD5SUM of files in the archive
