@@ -7,7 +7,7 @@ use Archive::Tar;
 use Data::Dumper;
 
 my $opts = {};
-getopts('Ddcvzthxf:IC', $opts) or die usage();
+getopts('Ddcvzthxf:ICT:', $opts) or die usage();
 
 ### show the help message ###
 die usage() if $opts->{h};
@@ -28,11 +28,21 @@ my $verbose     = $opts->{v} ? 1 : 0;
 my $file        = $opts->{f} ? $opts->{f} : 'default.tar';
 my $tar         = Archive::Tar->new();
 
-
 if( $opts->{c} ) {
     my @files;
+    my @src = @ARGV;
+    if( $opts->{T} ) {
+      if( $opts->{T} eq "-" ) {
+        chomp( @src = <STDIN> );
+	} elsif( open my $fh, "<", $opts->{T} ) {
+	    chomp( @src = <$fh> );
+	} else {
+	    die "$0: $opts->{T}: $!\n";
+	}
+    }
+
     find( sub { push @files, $File::Find::name;
-                print $File::Find::name.$/ if $verbose }, @ARGV );
+                print $File::Find::name.$/ if $verbose }, @src );
 
     if ($file eq '-') {
         use IO::Handle;
