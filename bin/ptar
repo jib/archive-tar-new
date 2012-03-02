@@ -6,6 +6,11 @@ use Getopt::Std;
 use Archive::Tar;
 use Data::Dumper;
 
+# Allow historic support for dashless bundled options
+#  tar cvf file.tar
+# is valid (GNU) tar style
+@ARGV && $ARGV[0] =~ m/^[DdcvzthxIC]+[fT]?$/ and
+    unshift @ARGV, map { "-$_" } split m// => shift @ARGV;
 my $opts = {};
 getopts('Ddcvzthxf:ICT:', $opts) or die usage();
 
