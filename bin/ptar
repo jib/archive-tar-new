@@ -98,6 +98,7 @@ sub usage {
 =head1 SYNOPSIS
 
     ptar -c [-v] [-z] [-C] [-f ARCHIVE_FILE | -] FILE FILE ...
+    ptar -c [-v] [-z] [-C] [-T index | -] [-f ARCHIVE_FILE | -]
     ptar -x [-v] [-z] [-f ARCHIVE_FILE | -]
     ptar -t [-z] [-f ARCHIVE_FILE | -]
     ptar -h
@@ -112,6 +113,7 @@ sub usage {
     v   Print filenames as they are added or extracted from ARCHIVE_FILE
     h   Prints this help message
     C   CPAN mode - drop 022 from permissions
+    T   get names to create from file
 
 =head1 SEE ALSO
 
