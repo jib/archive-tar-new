@@ -1451,6 +1451,12 @@ sub add_files {
             next;
         }
 
+        eval {
+            if( utf8::is_utf8( $file )) {
+              utf8::encode( $file );
+            }
+        };
+
         unless( -e $file || -l $file ) {
             $self->_error( qq[No such file: '$file'] );
             next;
