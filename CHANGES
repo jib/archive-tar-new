@@ -1,3 +1,6 @@
+* important changes in version 1.86 24/05/2012 (Mark Allen)
+- don't use tell on IO::Zlib handles RT#64339
+
 * important changes in version 1.84 02/03/2012 (HMBRAND)
 - ptar now supports -T option [rt#75473]
 - ptar now supports dashless options [rt#75475]
