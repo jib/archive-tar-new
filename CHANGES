@@ -1,3 +1,6 @@
+* important changes in version 1.88 01/06/2012 (Markus Prosch)
+- resolved chown won't work on symlinks
+
 * important changes in version 1.86 24/05/2012 (Mark Allen)
 - don't use tell on IO::Zlib handles RT#64339
 
