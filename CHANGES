@@ -1,3 +1,6 @@
+* important changes in version 1.90 05/09/2012 (Tom Jones)
+- documentation fixes
+
 * important changes in version 1.88 01/06/2012 (Markus Prosch)
 - resolved chown won't work on symlinks
 
