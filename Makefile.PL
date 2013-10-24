@@ -69,7 +69,7 @@ WriteMakefile1(
     #EXE_FILES       => ['bin/ptar', 'bin/ptardiff'],
     EXE_FILES       => [ _scripts() ],
     PREREQ_PM       => $prereqs,
-    INSTALLDIRS     => ( $] >= 5.009003 ? 'perl' : 'site' ),
+    INSTALLDIRS     => ( $] >= 5.009003 && $] < 5.012 ? 'perl' : 'site' ),
     AUTHOR          => 'Jos Boumans <kane[at]cpan.org>',
     ABSTRACT        => 'Manipulates TAR archives',
 );
@@ -84,6 +84,28 @@ sub _scripts {
          require File::Copy;
          File::Copy::copy( $_, "$_$version" ) for @scripts;
          @scripts = glob("bin/*$version");
+    }
+    if ( $] >= 5.012 && $Config::Config{installscript} ne $Config::Config{installsitescript} ) {
+      my $script = $Config::Config{installscript};
+      my $site   = $Config::Config{installsitescript};
+      warn <<"WARNING";
+###############################################################
+##
+##    Hi! Your script and sitescript locations are different
+##
+##    As your perl is v5.12.0 or greater the script included
+##    in this distribution will be installed into sitescript
+##
+##    You might want to check that the following location is
+##    in your PATH environment variable:
+##
+##    '$site'
+##
+##    Many thanks.
+###############################################################
+
+WARNING
+      sleep 10;
     }
   }
   return @scripts;
