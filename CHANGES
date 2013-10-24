@@ -1,3 +1,7 @@
+1.96  24/10/2013
+- integrate Package::Constants into Constant module
+  and remove requirement on it.
+
 1.94  24/10/2013
 - install into site if >= 5.012
 
