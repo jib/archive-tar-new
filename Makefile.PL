@@ -26,7 +26,6 @@ if( !$opt->{d} and not eval { require Text::Diff; 1 } ) {
 
 my $prereqs = {
     'Test::More'                    => 0,
-    'Package::Constants'            => 0,
     'File::Spec'                    => 0.82,
     'Test::Harness'                 => 2.26,    # bug in older versions
     'IO::Zlib'                      => 1.01,
