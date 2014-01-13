@@ -270,7 +270,7 @@ sub _new_from_file {
             unless( $fh->open($path) ) {
                 ### dangling symlinks are fine, stop reading but continue
                 ### creating the object
-                last READ if ($type == SYMLINK );
+                last READ if $type == SYMLINK;
 
                 ### otherwise, return from this function --
                 ### anything that's *not* a symlink should be
@@ -524,18 +524,16 @@ sub print_data {
     my $bytes_printed;
     my $err_str = '';
 
-    if ( defined $self->{filerefbuf} && $self->{filerefbuf} ne '' )
-    {
+    if ( defined $self->{filerefbuf} && $self->{filerefbuf} ne '' ) {
 	$bytes_printed = 0;
 
 	# determine the wanted buffer size
 	my $buf_len =
-	    $self->{filerefbuf} =~ /^(\d+)$/ && $1 > 1024 ? $1 : 1024;
+	    $self->{filerefbuf} =~ /^(\d+)$/ && $1 > BUFFER ? $1 : BUFFER;
 
 	# open the file
         my $in_fh = IO::File->new($self->{filerefpath}, 'r');
-	if ( ! defined $in_fh )
-	{
+	if ( ! defined $in_fh ) {
 	    $err_str = 'Could not open file ' . $self->{filerefpath} . '" for reading';
 	    return wantarray ? ( undef, $err_str ) : undef;
 	}
@@ -573,8 +571,7 @@ sub print_data {
 	    $err_str = 'File size mismatch with file ' . $self->{filerefpath} . '"';
 	}
     }
-    else
-    {
+    else {
         my $len = length $self->data();
 	my $success = $len > 0 ? print $handle $self->data() : 1;
 	if( $success ) {

@@ -1507,7 +1507,7 @@ effectively be a copy of the original, not an alias.
 
 The opthashref argument may contain a filerefbuf key, which causes the files
 to be processed in a late/lazy/incremental way.
-Any number larger than 1024 (default size) will be interpreted as wanted
+Any number larger than 4096 (default size) will be interpreted as wanted
 buffer size for file read/write operations.
 
 Returns a list of C<Archive::Tar::File> objects that were just added.
@@ -1638,7 +1638,7 @@ The $opthashref argument accepts the same values as the C<$tar->add_data> method
 plus filerebuf and optionally filerefpath.
 
 The file to be added will be processed in a late/lazy/incremental way.
-Any number larger than 1024 (default size) supplied as filerefbuf property will be
+Any number larger than 4096 (default size) supplied as filerefbuf property will be
 interpreted as wanted buffer size for file read/write operations.
 
 An additional filerefpath property may be used to enable file name translation
@@ -2437,7 +2437,7 @@ Please reports bugs to E<lt>bug-archive-tar@rt.cpan.orgE<gt>.
 
 Thanks to Sean Burke, Chris Nandor, Chip Salzenberg, Tim Heaney, Gisle Aas,
 Rainer Tammer and especially Andrew Savige for their help and suggestions.
-Incremental and fileref support added by Markus Jansen.
+Incremental write support added by Markus Jansen.
 
 =head1 COPYRIGHT
 
