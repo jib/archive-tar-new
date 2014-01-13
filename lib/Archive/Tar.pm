@@ -1252,14 +1252,15 @@ away in the directory you specify as prefix. So if you have files
 will be written to the archive as 'foo/a' and 'foo/b'.
 
 The fourth argument is an optional hashref. Accepted keys are
-incremental and handle, allowing incremental writes with a pre-allocated
-file handle. In case of incremental writes, a final write() call
+'incremental' and 'handle', allowing incremental writes with a pre-allocated
+file handle. In case of incremental writes, the final write() call
 should be issued without the incremental flag set, to write the
 end marker.
-Incremental writes may be used togeter with C<add_fileref> calls.
-The main purpose of this technique is to start producing the tar file early,
-especially in situations where looking up the list of files to create
-is a time consuming task.
+Incremental writes may be used togeter with C<add_fileref> calls
+and/or buffered C<add_file> calls.
+The main purpose of incremental C<write> calls is to start producing
+the tar file early, especially in situations where looking up the list
+of files to create is a time consuming task.
 
 If no arguments are given, C<write> returns the entire formatted
 archive as a string, which could be useful if you'd like to stuff the

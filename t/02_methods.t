@@ -674,7 +674,7 @@ my $tarfile_inc_size2 = 0;
 	$fh->open( $OUT_TAR_FILE, 'w' ) or warn( "Error opening '$OUT_TAR_FILE' for writing: $!" );
 	binmode $fh;
 
-	my ($obj)   = $tar->add_fileref( "${COMPRESS_FILE}_A", {filerefbuf => 2048, filerefpath => $COMPRESS_FILE } );
+	my ($obj)   = $tar->add_fileref( "${COMPRESS_FILE}_A", {filerefbuf => 1, filerefpath => $COMPRESS_FILE } );
 
         ok( $tar->write( '', '', '', { handle => $fh, incremental => 1 }),
                                     "   Tar file written incrementally" );
