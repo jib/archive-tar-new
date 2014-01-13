@@ -13,7 +13,7 @@ use Archive::Tar::Constant;
 
 use vars qw[@ISA $VERSION];
 #@ISA        = qw[Archive::Tar];
-$VERSION    = '1.96';
+$VERSION    = '1.96001';
 
 ### set value to 1 to oct() it during the unpack ###
 
@@ -250,6 +250,7 @@ sub _new_from_chunk {
 sub _new_from_file {
     my $class       = shift;
     my $path        = shift;
+    my $opt         = shift;
 
     ### path has to at least exist
     return unless defined $path;
@@ -257,14 +258,19 @@ sub _new_from_file {
     my $type        = __PACKAGE__->_filetype($path);
     my $data        = '';
 
+    my $filerefbuf   = $opt && ref $opt eq 'HASH' &&
+                          defined $opt->{filerefbuf} &&
+			  $opt->{filerefbuf} =~ /^[1-9yY]/ ? 
+			      $opt->{filerefbuf} : '';
+
     READ: {
-        unless ($type == DIR ) {
+        unless ($type == DIR || $filerefbuf ne '' ) {
             my $fh = IO::File->new;
 
             unless( $fh->open($path) ) {
                 ### dangling symlinks are fine, stop reading but continue
                 ### creating the object
-                last READ if $type == SYMLINK;
+                last READ if ($type == SYMLINK );
 
                 ### otherwise, return from this function --
                 ### anything that's *not* a symlink should be
@@ -334,6 +340,11 @@ sub _new_from_file {
         prefix      => '',
         data        => $data,
     };
+    if ( $filerefbuf ne '' ) {
+	$obj->{filerefbuf}  = $filerefbuf;
+	$obj->{filerefpath} = $path;
+	$obj->{filerefsize} = $obj->{size};
+    }
 
     bless $obj, $class;
 
@@ -376,9 +387,17 @@ sub _new_from_data {
         for my $key ( keys %$opt ) {
 
             ### don't write bogus options ###
-            next unless exists $obj->{$key};
+            next unless( exists $obj->{$key} || $key =~ /^(?:filerefbuf|filerefpath)$/ );
             $obj->{$key} = $opt->{$key};
         }
+    }
+    if( defined $obj->{filerefbuf} ) {
+	$obj->{filerefpath} = $path if( ! defined $obj->{filerefpath} );
+	my $filerefsize = $obj->{size};
+	if ( $filerefsize == 0 ) {     # not specified in $opt
+	    $filerefsize = (lstat $obj->{filerefpath})[7] || 0;
+	}
+	$obj->{size} = $obj->{filerefsize} = $filerefsize;
     }
 
     bless $obj, $class;
@@ -489,6 +508,86 @@ sub full_path {
 }
 
 
+=head2 $bool = $file->print_data
+
+Used by Archive::Tar internally when writing the tar file:
+prints the data, and reads/prints them in streaming mode.
+
+Returns the bytes printed and optionally an error string.
+
+=cut
+
+sub print_data {
+    my $self   = shift;
+    my $handle = shift;
+
+    my $bytes_printed;
+    my $err_str = '';
+
+    if ( defined $self->{filerefbuf} && $self->{filerefbuf} ne '' )
+    {
+	$bytes_printed = 0;
+
+	# determine the wanted buffer size
+	my $buf_len =
+	    $self->{filerefbuf} =~ /^(\d+)$/ && $1 > 1024 ? $1 : 1024;
+
+	# open the file
+        my $in_fh = IO::File->new($self->{filerefpath}, 'r');
+	if ( ! defined $in_fh )
+	{
+	    $err_str = 'Could not open file ' . $self->{filerefpath} . '" for reading';
+	    return wantarray ? ( undef, $err_str ) : undef;
+	}
+	$in_fh->binmode();
+
+	# copy file chunks
+	my $eof = 0;
+	while ( ! $eof ) {
+	    my $buf;
+	    my $bytes_read = sysread $in_fh, $buf, $buf_len;
+
+	    if ( defined $bytes_read && $bytes_read > 0 ) {
+		my $success = print $handle $buf;
+		if ( $success ) {
+		    $bytes_printed += $bytes_read;
+		}
+		else {
+		    $err_str = "Could not write data for: " . $self->full_path();
+		}
+	    }
+	    elsif ( ! $!{EINTR} ) {
+		if ( ! defined $bytes_read ) {
+		    $err_str = 'Problems reading file ' . $self->{filerefpath} . '"';
+		}
+	        $eof++;
+	    }
+	}
+
+	my $cl_success = close($in_fh);
+	if ( ! $cl_success ) {
+	    $err_str = 'Problems closing file ' . $self->{filerefpath} . '" after reading';
+	}
+    
+        if ( $bytes_printed != $self->{filerefsize} ) {
+	    $err_str = 'File size mismatch with file ' . $self->{filerefpath} . '"';
+	}
+    }
+    else
+    {
+        my $len = length $self->data();
+	my $success = $len > 0 ? print $handle $self->data() : 1;
+	if( $success ) {
+	    $bytes_printed = $len;
+	}
+	else {
+	    $err_str = "Could not write data for: " . $self->full_path();
+	}
+    }
+
+    return wantarray ? ( $bytes_printed, $err_str ) : $bytes_printed;
+}
+
 =head2 $bool = $file->validate
 
 Done by Archive::Tar internally when reading the tar file:
@@ -526,7 +625,10 @@ for using uninitialized values when looking at an object's content.
 
 sub has_content {
     my $self = shift;
-    return defined $self->data() && length $self->data() ? 1 : 0;
+    return 
+        ( ( defined $self->data() && length $self->data() ) ||
+	  ( defined $self->{filerefbuf} && $self->{filerefbuf} ne '' &&
+	    $self->{filerefsize} > 0 ) ) ? 1 : 0;
 }
 
 =head2 $content = $file->get_content

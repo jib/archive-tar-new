@@ -603,6 +603,163 @@ SKIP: {                             ### pesky warnings
     rm( $OUT_TAR_FILE ) unless $NO_UNLINK;
 }
 
+### fileref test: add single file
+{   my $tar     = $Class->new;
+
+
+    ### first write a tar file without prefix
+    {   my ($obj)   = $tar->add_files( {filerefbuf => 2048, }, $COMPRESS_FILE );
+
+        ok( $tar->write( $OUT_TAR_FILE ),
+                                    "   Tar file written" );
+
+        ### and forget all about it...
+        $tar->clear;
+    }
+
+    ### now read it back in, there should be no prefix
+    {   ok( $tar->read( $OUT_TAR_FILE ),
+                                    "   Tar file read in again" );
+
+	my $orig_content    = slurp_binfile( $COMPRESS_FILE );
+	my $content = $tar->get_content( $COMPRESS_FILE );
+        is( $orig_content, $content,
+                                    "       add_files with filerefbuf works" );
+    }
+
+    rm( $OUT_TAR_FILE ) unless $NO_UNLINK;
+}
+
+### fileref test: use filerefpath {   my $tar     = $Class->new;
+{   my $tar     = $Class->new;
+
+
+    ### first write a tar file without prefix
+    {   my ($obj) = $tar->add_fileref( "${COMPRESS_FILE}_A", {filerefbuf => 2048, filerefpath => $COMPRESS_FILE } );
+        $obj      = $tar->add_fileref( "${COMPRESS_FILE}_B", {filerefbuf => 2048, filerefpath => $COMPRESS_FILE } );
+
+        ok( $tar->write( $OUT_TAR_FILE ),
+                                    "   Tar file written" );
+
+        ### and forget all about it...
+        $tar->clear;
+    }
+
+    ### now read it back in, there should be no prefix
+    {   ok( $tar->read( $OUT_TAR_FILE ),
+                                    "   Tar file read in again" );
+
+	my $orig_content    = slurp_binfile( $COMPRESS_FILE );
+	my $contentA = $tar->get_content( "${COMPRESS_FILE}_A" );
+	my $contentB = $tar->get_content( "${COMPRESS_FILE}_B" );
+        ok( length $contentA > 0,
+                                    "       add_fileref returns contents" );
+        is( $orig_content, $contentA,
+                                    "       add_fileref works" );
+        is( $orig_content, $contentB,
+                                    "       add_fileref file rename works" );
+    }
+
+    rm( $OUT_TAR_FILE ) unless $NO_UNLINK;
+}
+
+my $tarfile_inc_size1 = 0;
+my $tarfile_inc_size2 = 0;
+### increment test: same as above, with incremental writes
+{   my $tar     = $Class->new;
+
+
+    ### first write a tar file without prefix
+    {   my $fh      = IO::File->new;
+	$fh->open( $OUT_TAR_FILE, 'w' ) or warn( "Error opening '$OUT_TAR_FILE' for writing: $!" );
+	binmode $fh;
+
+	my ($obj)   = $tar->add_fileref( "${COMPRESS_FILE}_A", {filerefbuf => 2048, filerefpath => $COMPRESS_FILE } );
+
+        ok( $tar->write( '', '', '', { handle => $fh, incremental => 1 }),
+                                    "   Tar file written incrementally" );
+
+        $obj   = $tar->add_fileref( "${COMPRESS_FILE}_B", {filerefbuf => 2048, filerefpath => $COMPRESS_FILE } );
+
+        ok( $tar->write( '', '', '', { handle => $fh, incremental => 0 }),
+                                    "   Tar file written incrementally, 2nd and end part" );
+
+	$fh->close() or warn( "Error closing '$OUT_TAR_FILE' after writing: $!" );
+        ### and forget all about it...
+        $tar->clear;
+    }
+
+    $tarfile_inc_size1 = -s $OUT_TAR_FILE;
+
+    ### now read it back in, there should be no prefix
+    {   ok( $tar->read( $OUT_TAR_FILE ),
+                                    "   Tar file read in again" );
+
+	check_tar_file( $OUT_TAR_FILE );
+
+	my $orig_content    = slurp_binfile( $COMPRESS_FILE );
+	my $contentA = $tar->get_content( "${COMPRESS_FILE}_A" );
+	my $contentB = $tar->get_content( "${COMPRESS_FILE}_B" );
+        is( $orig_content, $contentA,
+                                    "       incrmental write works" );
+        is( $orig_content, $contentB,
+                                    "       incrmental write 2nd time works" );
+    }
+
+    rm( $OUT_TAR_FILE ) unless $NO_UNLINK;
+}
+
+### increment test: same as above, with separate end
+{   my $tar     = $Class->new;
+
+
+    ### first write a tar file without prefix
+    {   my $fh      = IO::File->new;
+	$fh->open( $OUT_TAR_FILE, 'w' ) or warn( "Error opening '$OUT_TAR_FILE' for writing: $!" );
+	binmode $fh;
+
+	my ($obj)   = $tar->add_fileref( "${COMPRESS_FILE}_A", {filerefbuf => 2048, filerefpath => $COMPRESS_FILE } );
+
+        ok( $tar->write( '', '', '', { handle => $fh, incremental => 1 }),
+                                    "   Tar file written incrementally" );
+
+        $obj   = $tar->add_fileref( "${COMPRESS_FILE}_B", {filerefbuf => 2048, filerefpath => $COMPRESS_FILE } );
+
+        ok( $tar->write( '', '', '', { handle => $fh, incremental => 1 }),
+                                    "   Tar file written incrementally, 2nd part" );
+
+        ok( $tar->write( '', '', '', { handle => $fh, incremental => 0 }),
+                                    "   Tar file written incrementally, separate end part" );
+
+	$fh->close() or warn( "Error closing '$OUT_TAR_FILE' after writing: $!" );
+        ### and forget all about it...
+        $tar->clear;
+    }
+
+    $tarfile_inc_size2 = -s $OUT_TAR_FILE;
+
+    ### now read it back in, there should be no prefix
+    {   ok( $tar->read( $OUT_TAR_FILE ),
+                                    "   Tar file read in again" );
+
+	my $orig_content    = slurp_binfile( $COMPRESS_FILE );
+	my $contentA = $tar->get_content( "${COMPRESS_FILE}_A" );
+	my $contentB = $tar->get_content( "${COMPRESS_FILE}_B" );
+
+	check_tar_file( $OUT_TAR_FILE );
+
+        is( $orig_content, $contentA,
+                                    "       incrmental write with separate end works" );
+        is( $orig_content, $contentB,
+                                    "       incrmental write with separate end 2nd time works" );
+
+	ok( $tarfile_inc_size1 == $tarfile_inc_size2,
+	                            "       incrmental write with separate end produces same tar file length" );
+    }
+
+    rm( $OUT_TAR_FILE ) unless $NO_UNLINK;
+}
+
 ### clean up stuff
 END {
     for my $struct ( \@EXPECT_NORMAL, \@EXPECTBIN, \@EXPECTX ) {
