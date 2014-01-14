@@ -1526,7 +1526,12 @@ sub add_files {
 	    $opt = {};
 	    if( ref $file eq 'HASH' ) {
 	        if( defined $file->{filerefbuf} && $file->{filerefbuf} =~ /^[1-9Yy]/ ) {
-		    $opt->{filerefbuf} = $file->{filerefbuf};
+		    if (ON_VMS) {
+			$self->_error( qq[option filerefbuf is currently not supported on VMS] );
+		    }
+		    else {
+			$opt->{filerefbuf} = $file->{filerefbuf};
+		    }
 		}
 		next;
 	    }
@@ -1635,14 +1640,14 @@ sub add_data {
 
 =head2 $tar->add_fileref ( $filename, [$opthashref] )
 
-The $opthashref argument accepts the same values as the C<$tar->add_data> method,
-plus filerebuf and optionally filerefpath.
+The $opthashref argument accepts the same properties as the C<$tar->add_data> method,
+plus optionally filerebuf and filerefpath.
 
 The file to be added will be processed in a late/lazy/incremental way.
 Any number larger than 4096 (default size) supplied as filerefbuf property will be
 interpreted as wanted buffer size for file read/write operations.
 
-An additional filerefpath property may be used to enable file name translation
+The filerefpath property may be used to enable file name translation
 by pointing to the path to read from.
 
 Returns the C<Archive::Tar::File> object that was just added, or
@@ -1653,9 +1658,67 @@ C<undef> on failure.
 sub add_fileref {
     my $self    = shift;
     my ($file, $opt) = @_;
+
+    if (ON_VMS) {
+	$self->_error( qq[add_fileref is currently not supported on VMS] );
+	return;
+
+	### For proper handling on VMS, we would need to
+	### a) correct the uid here
+	### b) correct the size after reading
+	### as done in function Arhive::Tar::File::_read_from_file.
+	### Since the header cannot be re-calculated and changed after printing the file
+	### under all circumstances, this is not implmemented.
+	###
+	### If you need to use this functionality under VMS, use add_file directly.
+    }
+
     $opt->{filerefbuf}++ unless ( defined $opt->{filerefbuf} );
 
-    return $self->add_data($file, '', $opt);
+    my $filerefpath;
+    eval {
+	if( utf8::is_utf8( $file )) {
+	  utf8::encode( $file );
+	}
+    };
+    if ( defined $opt->{filerefpath} ) {
+	$filerefpath = $opt->{filerefpath};
+	eval {
+	    if( utf8::is_utf8( $filerefpath )) {
+	      utf8::encode( $filerefpath );
+	    }
+	};
+    }
+    else {
+	$filerefpath = $file;
+    }
+    $opt->{filerefpath} = $filerefpath;
+
+    my @items = qw[ino mode uid gid size mtime];
+    my %hash  = map { shift(@items), $_ } (lstat $filerefpath)[1,2,4,5,7,9];
+    if ( ! $hash{ino} ) {
+	$self->_error( qq[No such file: '$filerefpath'] );
+	return;
+    }
+
+    $hash{type}  = Archive::Tar::File->_filetype($filerefpath);
+    $hash{uname} = UNAME->( $hash{uid} );
+    $hash{gname} = GNAME->( $hash{gid} );
+    if( $hash{type} == SYMLINK and CAN_READLINK) {
+	$hash{linkname} = readlink $filerefpath;
+    }
+
+    foreach my $key ( keys %hash )
+    {
+        $opt->{$key} = $hash{$key}
+	    unless ( $key eq 'ino' || defined $opt->{$key} );
+    }
+
+    my $obj = $self->add_data($file, '', $opt);
+    unless( $obj ) {
+	$self->_error( qq[Unable to add file: '$filerefpath'] );
+    }
+    return $obj;
 }
 
 =head2 $tar->error( [$BOOL] )

@@ -340,10 +340,11 @@ sub _new_from_file {
         prefix      => '',
         data        => $data,
     };
+
+    ### complete fileref information if appropriate ###
     if ( $filerefbuf ne '' ) {
 	$obj->{filerefbuf}  = $filerefbuf;
 	$obj->{filerefpath} = $path;
-	$obj->{filerefsize} = $obj->{size};
     }
 
     bless $obj, $class;
@@ -387,17 +388,14 @@ sub _new_from_data {
         for my $key ( keys %$opt ) {
 
             ### don't write bogus options ###
-            next unless( exists $obj->{$key} || $key =~ /^(?:filerefbuf|filerefpath)$/ );
+            next unless( exists $obj->{$key} || $key =~ /^fileref(?:buf|path)$/ );
             $obj->{$key} = $opt->{$key};
         }
     }
+
+    ### complete fileref information if appropriate ###
     if( defined $obj->{filerefbuf} ) {
 	$obj->{filerefpath} = $path if( ! defined $obj->{filerefpath} );
-	my $filerefsize = $obj->{size};
-	if ( $filerefsize == 0 ) {     # not specified in $opt
-	    $filerefsize = (lstat $obj->{filerefpath})[7] || 0;
-	}
-	$obj->{size} = $obj->{filerefsize} = $filerefsize;
     }
 
     bless $obj, $class;
@@ -567,7 +565,7 @@ sub print_data {
 	    $err_str = 'Problems closing file ' . $self->{filerefpath} . '" after reading';
 	}
     
-        if ( $bytes_printed != $self->{filerefsize} ) {
+        if ( $bytes_printed != $self->size() ) {
 	    $err_str = 'File size mismatch with file ' . $self->{filerefpath} . '"';
 	}
     }
@@ -625,7 +623,7 @@ sub has_content {
     return 
         ( ( defined $self->data() && length $self->data() ) ||
 	  ( defined $self->{filerefbuf} && $self->{filerefbuf} ne '' &&
-	    $self->{filerefsize} > 0 ) ) ? 1 : 0;
+	    $self->size() > 0 ) ) ? 1 : 0;
 }
 
 =head2 $content = $file->get_content
