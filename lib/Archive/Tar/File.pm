@@ -539,8 +539,8 @@ sub print_data {
 
 	# copy file chunks
 	my $eof = 0;
+	my $buf;
 	while ( ! $eof ) {
-	    my $buf;
 	    my $bytes_read = sysread $in_fh, $buf, $buf_len;
 
 	    if ( defined $bytes_read && $bytes_read > 0 ) {
