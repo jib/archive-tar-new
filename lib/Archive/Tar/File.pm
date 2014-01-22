@@ -2,6 +2,7 @@ package Archive::Tar::File;
 use strict;
 
 use Carp                ();
+use Errno        qw(EINTR);
 use IO::File;
 use File::Spec::Unix    ();
 use File::Spec          ();
@@ -13,7 +14,7 @@ use Archive::Tar::Constant;
 
 use vars qw[@ISA $VERSION];
 #@ISA        = qw[Archive::Tar];
-$VERSION    = '1.96';
+$VERSION    = '1.96002';
 
 ### set value to 1 to oct() it during the unpack ###
 
@@ -250,6 +251,7 @@ sub _new_from_chunk {
 sub _new_from_file {
     my $class       = shift;
     my $path        = shift;
+    my $opt         = shift;
 
     ### path has to at least exist
     return unless defined $path;
@@ -257,8 +259,13 @@ sub _new_from_file {
     my $type        = __PACKAGE__->_filetype($path);
     my $data        = '';
 
+    my $filerefbuf   = $opt && ref $opt eq 'HASH' &&
+                          defined $opt->{filerefbuf} &&
+			  $opt->{filerefbuf} =~ /^[1-9yY]/ ? 
+			      $opt->{filerefbuf} : '';
+
     READ: {
-        unless ($type == DIR ) {
+        unless ($type == DIR || $filerefbuf ne '' ) {
             my $fh = IO::File->new;
 
             unless( $fh->open($path) ) {
@@ -335,6 +342,12 @@ sub _new_from_file {
         data        => $data,
     };
 
+    ### complete fileref information if appropriate ###
+    if ( $filerefbuf ne '' ) {
+	$obj->{filerefbuf}  = $filerefbuf;
+	$obj->{filerefpath} = $path;
+    }
+
     bless $obj, $class;
 
     ### fix up the prefix and file from the path
@@ -376,9 +389,20 @@ sub _new_from_data {
         for my $key ( keys %$opt ) {
 
             ### don't write bogus options ###
-            next unless exists $obj->{$key};
+            next unless( exists $obj->{$key} || $key =~ /^fileref(?:buf|path)$/ );
             $obj->{$key} = $opt->{$key};
         }
+    }
+
+    ### complete fileref information if appropriate ###
+    if( defined $obj->{filerefbuf} ) {
+	if ( $obj->{filerefbuf} =~ /^[1-9yY]/ ) {
+	    $obj->{filerefbuf}  = $obj->{filerefbuf} =~ /^(\d)+$/ ? $1 : 1;
+	    $obj->{filerefpath} = $path if( ! defined $obj->{filerefpath} );
+	}
+	else {
+	    delete $obj->{filerefbuf};
+	}
     }
 
     bless $obj, $class;
@@ -489,6 +513,91 @@ sub full_path {
 }
 
 
+=head2 $bool = $file->print_data
+
+Used by Archive::Tar internally when writing the tar file:
+prints the data, and reads/prints them in streaming mode.
+
+The optional $progress_cb CODE argument can be used to monitor the progress
+inside the buffer loop, or to check some condition even inside a really long write.
+
+Returns the bytes printed and optionally an error string.
+
+=cut
+
+sub print_data {
+    my $self        = shift;
+    my $handle      = shift;
+    my $progress_cb = shift;
+
+    my $bytes_printed;
+    my $err_str = '';
+
+    if ( defined $self->{filerefbuf} && $self->{filerefbuf} ne '' ) {
+	$bytes_printed = 0;
+
+	# determine the wanted buffer size
+	my $buf_len =
+	    $self->{filerefbuf} =~ /^(\d+)$/ && $1 > BUFFER ? $1 : BUFFER;
+
+	# open the file
+        my $in_fh = IO::File->new($self->{filerefpath}, 'r');
+	if ( ! defined $in_fh ) {
+	    $err_str = 'Could not open file ' . $self->{filerefpath} . '" for reading';
+	    return wantarray ? ( undef, $err_str ) : undef;
+	}
+	$in_fh->binmode();
+
+	# copy file chunks
+	my $eof = 0;
+	my $buf;
+	while ( ! $eof ) {
+	    my $bytes_read = sysread $in_fh, $buf, $buf_len;
+
+	    if ( defined $bytes_read && $bytes_read > 0 ) {
+		my $success = print $handle $buf;
+		if ( $success ) {
+		    $bytes_printed += $bytes_read;
+		}
+		else {
+		    $err_str = "Could not write data for: " . $self->full_path();
+		    $eof++; # just to end the loop
+		}
+	    }
+	    elsif ( ! $!{EINTR} ) {
+		if ( ! defined $bytes_read ) {
+		    $err_str = 'Problems reading file ' . $self->{filerefpath} . '"';
+		}
+	        $eof++;
+	    }
+	    &$progress_cb() if ( defined $progress_cb );
+	}
+
+	my $cl_success = close($in_fh);
+	if ( ! $cl_success ) {
+	    $err_str = 'Problems closing file ' . $self->{filerefpath} . '" after reading';
+	}
+    
+        if ( $bytes_printed != $self->size() ) {
+	    $err_str = 'File size mismatch with file ' . $self->{filerefpath} . '"';
+	}
+    }
+    else {
+        my $len = length $self->data();
+	my $success = $len > 0 ? print $handle $self->data() : 1;
+	if( $success ) {
+	    $bytes_printed = $len;
+	}
+	else {
+	    $err_str = "Could not write data for: " . $self->full_path();
+	}
+
+	&$progress_cb() if ( defined $progress_cb );
+    }
+
+    return wantarray ? ( $bytes_printed, $err_str ) : $bytes_printed;
+}
+
 =head2 $bool = $file->validate
 
 Done by Archive::Tar internally when reading the tar file:
@@ -526,7 +635,10 @@ for using uninitialized values when looking at an object's content.
 
 sub has_content {
     my $self = shift;
-    return defined $self->data() && length $self->data() ? 1 : 0;
+    return 
+        ( ( defined $self->data() && length $self->data() ) ||
+	  ( defined $self->{filerefbuf} && $self->{filerefbuf} ne '' &&
+	    $self->size() > 0 ) ) ? 1 : 0;
 }
 
 =head2 $content = $file->get_content

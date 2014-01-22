@@ -31,7 +31,7 @@ use vars qw[$DEBUG $error $VERSION $WARN $FOLLOW_SYMLINK $CHOWN $CHMOD
 $DEBUG                  = 0;
 $WARN                   = 1;
 $FOLLOW_SYMLINK         = 0;
-$VERSION                = "1.96";
+$VERSION                = "1.96002";
 $CHOWN                  = 1;
 $CHMOD                  = 1;
 $SAME_PERMISSIONS       = $> == 0 ? 1 : 0;
@@ -1224,7 +1224,7 @@ sub clear {
 }
 
 
-=head2 $tar->write ( [$file, $compressed, $prefix] )
+=head2 $tar->write ( [$file, $compressed, $prefix, $opthashref] )
 
 Write the in-memory archive to disk.  The first argument can either
 be the name of a file or a reference to an already open filehandle (a
@@ -1251,10 +1251,26 @@ away in the directory you specify as prefix. So if you have files
 'a' and 'b' in your archive, and you specify 'foo' as prefix, they
 will be written to the archive as 'foo/a' and 'foo/b'.
 
+The fourth argument is an optional hashref. Accepted keys are
+'incremental', 'handle', and 'progress_cb',
+allowing incremental writes with a pre-allocated file handle.
+In case of incremental writes, the final write() call
+should be issued without the incremental flag set, to write the
+end marker.
+Incremental writes may be used togeter with C<add_fileref> calls
+and/or buffered C<add_file> calls.
+The main purpose of incremental C<write> calls is to start producing
+the tar file early, especially in situations where looking up the list
+of files to create is a time consuming task.
+The optional progress_cb CODE argument can be used to monitor the progress
+inside the buffer loop, or to check some condition even inside a really long write.
+
 If no arguments are given, C<write> returns the entire formatted
 archive as a string, which could be useful if you'd like to stuff the
 archive into a socket or a pipe to gzip or something.
 
+When an array is requested in incremental mode, C<write> returns one
+with the file handle as second entry.
 
 =cut
 
@@ -1263,10 +1279,20 @@ sub write {
     my $file        = shift; $file = '' unless defined $file;
     my $gzip        = shift || 0;
     my $ext_prefix  = shift; $ext_prefix = '' unless defined $ext_prefix;
+    my $opt         = shift;
     my $dummy       = '';
 
+    $opt = {} if ( ! defined $opt || ref $opt ne 'HASH' );
+    my $incremental     = defined $opt->{incremental} && $opt->{incremental} =~ /^[1-9yY]/ ? 
+			      1 : 0;
+    my $external_handle = defined $opt->{handle} ? $opt->{handle} : undef;
+    my $progress_cb     = defined $opt->{progress_cb} && ref $opt->{progress_cb} eq 'CODE' ?
+			      $opt->{progress_cb} : undef;
+
     ### only need a handle if we have a file to print to ###
-    my $handle = length($file)
+    my $handle = defined $external_handle
+		    ? $external_handle
+		    : length($file)
                     ? ( $self->_get_handle($file, $gzip, WRITE_ONLY->($gzip) )
                         or return )
                     : $HAS_PERLIO    ? do { open my $h, '>', \$dummy; $h }
@@ -1354,6 +1380,8 @@ sub write {
 
             ### downgrade to a 'normal' file if it's a symlink we're going to
             ### treat as a regular file
+
+	    ### TODO: DEFECT: following symlinks needs to be done in add_data() and add_files()
             $clone->_downgrade_to_plainfile if $link_ok;
 
             ### get the header for this block
@@ -1371,37 +1399,50 @@ sub write {
             }
 
             if( $link_ok or $data_ok ) {
-                unless( print $handle $clone->data ) {
-                    $self->_error(q[Could not write data for: ] .
-                                    $clone->full_path);
+		my ( $bytes_printed, $err_str ) =
+		    $clone->print_data($handle, $progress_cb);
+		if( $err_str ne '' ) {
+                    $self->_error($err_str);
                     return;
-                }
-
-                ### pad the end of the clone if required ###
-                print $handle TAR_PAD->( $clone->size ) if $clone->size % BLOCK
+		}
+		elsif( $bytes_printed  > 0 ) {
+		    ### pad the end of the clone if required ###
+		    if ( $clone->size % BLOCK ) {
+			unless( print $handle TAR_PAD->( $clone->size ) ) {
+			    $self->_error(q[Could not write header for: ] .
+						$clone->full_path);
+			    return;
+			}
+		    }
+		}
             }
 
         } ### done writing these entries
     }
 
-    ### write the end markers ###
-    print $handle TAR_END x 2 or
-            return $self->_error( qq[Could not write tar end markers] );
+    if( $incremental ) {
+        $self->clear();
+    }
+    ### write the end markers if appropriate ###
+    else {
+	print $handle TAR_END x 2 or
+		return $self->_error( qq[Could not write tar end markers] );
 
-    ### did you want it written to a file, or returned as a string? ###
-    my $rv =  length($file) ? 1
-                        : $HAS_PERLIO ? $dummy
-                        : do { seek $handle, 0, 0; local $/; <$handle> };
-
-    ### make sure to close the handle if we created it
-    if ( $file ne $handle ) {
-	unless( close $handle ) {
-	    $self->_error( qq[Could not write tar] );
-	    return;
+	### make sure to close the handle if we created it
+	if ( ! defined $external_handle && $file ne $handle ) {
+	    unless( close $handle ) {
+		$self->_error( qq[Could not write tar] );
+		return;
+	    }
 	}
     }
 
-    return $rv;
+    ### did you want it written to a file, or returned as a string? ###
+    my $rv =  length($file) || defined $external_handle ? 1
+			: $HAS_PERLIO ? $dummy
+			: do { seek $handle, 0, 0; local $/; <$handle> };
+
+    return wantarray && $incremental ? ( $rv, $handle ) : $rv;
 }
 
 sub _format_tar_entry {
@@ -1458,7 +1499,7 @@ sub _format_tar_entry {
     return $tar;
 }
 
-=head2 $tar->add_files( @filenamelist )
+=head2 $tar->add_files( [ $opthashref] @filenamelist )
 
 Takes a list of filenames and adds them to the in-memory archive.
 
@@ -1473,8 +1514,13 @@ Be aware that the file's type/creator and resource fork will be lost,
 which is usually what you want in cross-platform archives.
 
 Instead of a filename, you can also pass it an existing C<Archive::Tar::File>
-object from, for example, another archive. The object will be clone, and
+object from, for example, another archive. The object will be cloned, and
 effectively be a copy of the original, not an alias.
+
+The opthashref argument may contain a filerefbuf key, which causes the files
+to be processed in a late/lazy/incremental way.
+Any number larger than 4096 (default size) will be interpreted as wanted
+buffer size for file read/write operations.
 
 Returns a list of C<Archive::Tar::File> objects that were just added.
 
@@ -1484,8 +1530,23 @@ sub add_files {
     my $self    = shift;
     my @files   = @_ or return;
 
+    my $opt;
     my @rv;
     for my $file ( @files ) {
+	if( ! defined $opt ) {    # check on first argument only
+	    $opt = {};
+	    if( ref $file eq 'HASH' ) {
+	        if( defined $file->{filerefbuf} && $file->{filerefbuf} =~ /^[1-9Yy]/ ) {
+		    if (ON_VMS) {
+			$self->_error( qq[option filerefbuf is currently not supported on VMS] );
+		    }
+		    else {
+			$opt->{filerefbuf} = $file->{filerefbuf} =~ /^(\d)+$/ ? $1 : 1;
+		    }
+		}
+		next;
+	    }
+	}
 
         ### you passed an Archive::Tar::File object
         ### clone it so we don't accidentally have a reference to
@@ -1506,7 +1567,7 @@ sub add_files {
             next;
         }
 
-        my $obj = Archive::Tar::File->new( file => $file );
+        my $obj = Archive::Tar::File->new( file => $file, $opt );
         unless( $obj ) {
             $self->_error( qq[Unable to add file: '$file'] );
             next;
@@ -1529,7 +1590,7 @@ Will add a file to the in-memory archive, with name C<$filename> and
 content C<$data>. Specific properties can be set using C<$opthashref>.
 The following list of properties is supported: name, size, mtime
 (last modified date), mode, uid, gid, linkname, uname, gname,
-devmajor, devminor, prefix, type.  (On MacOS, the file's path and
+devmajor, devminor, prefix, type. (On MacOS, the file's path and
 modification times are converted to Unix equivalents.)
 
 Valid values for the file type are the following constants defined by
@@ -1585,6 +1646,88 @@ sub add_data {
 
     push @{$self->{_data}}, $obj;
 
+    return $obj;
+}
+
+=head2 $tar->add_fileref ( $filename, [$opthashref] )
+
+The $opthashref argument accepts the same properties as the C<$tar->add_data> method,
+plus optionally filerebuf and filerefpath.
+
+The file to be added will be processed in a late/lazy/incremental way.
+Any number larger than 4096 (default size) supplied as filerefbuf property will be
+interpreted as wanted buffer size for file read/write operations.
+
+The filerefpath property may be used to enable file name translation
+by pointing to the path to read from.
+
+Returns the C<Archive::Tar::File> object that was just added, or
+C<undef> on failure.
+
+=cut
+
+sub add_fileref {
+    my $self    = shift;
+    my ($file, $opt) = @_;
+
+    if (ON_VMS) {
+	$self->_error( qq[add_fileref is currently not supported on VMS] );
+	return;
+
+	### For proper handling on VMS, we would need to
+	### a) correct the uid here
+	### b) correct the size after reading
+	### as done in function Arhive::Tar::File::_read_from_file.
+	### Since the header cannot be re-calculated and changed after printing the file
+	### under all circumstances, this is not implmemented.
+	###
+	### If you need to use this functionality under VMS, use add_file directly.
+    }
+
+    $opt->{filerefbuf}++ unless ( defined $opt->{filerefbuf} );
+
+    my $filerefpath;
+    eval {
+	if( utf8::is_utf8( $file )) {
+	  utf8::encode( $file );
+	}
+    };
+    if ( defined $opt->{filerefpath} ) {
+	$filerefpath = $opt->{filerefpath};
+	eval {
+	    if( utf8::is_utf8( $filerefpath )) {
+	      utf8::encode( $filerefpath );
+	    }
+	};
+    }
+    else {
+	$filerefpath = $file;
+    }
+    $opt->{filerefpath} = $filerefpath;
+
+    my @items = qw[ino mode uid gid size mtime];
+    my %hash  = map { shift(@items), $_ } (lstat $filerefpath)[1,2,4,5,7,9];
+    if ( ! $hash{ino} ) {
+	$self->_error( qq[No such file: '$filerefpath'] );
+	return;
+    }
+
+    $hash{type}  = Archive::Tar::File->_filetype($filerefpath);
+    $hash{uname} = UNAME->( $hash{uid} );
+    $hash{gname} = GNAME->( $hash{gid} );
+    if( $hash{type} == SYMLINK and CAN_READLINK) {
+	$hash{linkname} = readlink $filerefpath;
+    }
+
+    foreach my $key ( keys %hash ) {
+        $opt->{$key} = $hash{$key}
+	    unless ( $key eq 'ino' || defined $opt->{$key} );
+    }
+
+    my $obj = $self->add_data($file, '', $opt);
+    unless( $obj ) {
+	$self->_error( qq[Unable to add file: '$filerefpath'] );
+    }
     return $obj;
 }
 
@@ -2368,6 +2511,7 @@ Please reports bugs to E<lt>bug-archive-tar@rt.cpan.orgE<gt>.
 
 Thanks to Sean Burke, Chris Nandor, Chip Salzenberg, Tim Heaney, Gisle Aas,
 Rainer Tammer and especially Andrew Savige for their help and suggestions.
+Incremental write support added by Markus Jansen.
 
 =head1 COPYRIGHT
 
