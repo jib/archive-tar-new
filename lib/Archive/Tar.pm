@@ -1541,7 +1541,7 @@ sub add_files {
 			$self->_error( qq[option filerefbuf is currently not supported on VMS] );
 		    }
 		    else {
-			$opt->{filerefbuf} = $file->{filerefbuf};
+			$opt->{filerefbuf} = $file->{filerefbuf} =~ /^(\d)+$/ ? $1 : 1;
 		    }
 		}
 		next;
