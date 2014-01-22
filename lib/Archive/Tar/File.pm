@@ -396,13 +396,11 @@ sub _new_from_data {
 
     ### complete fileref information if appropriate ###
     if( defined $obj->{filerefbuf} ) {
-	if ( $obj->{filerefbuf} =~ /^[1-9yY]/ )
-	{
+	if ( $obj->{filerefbuf} =~ /^[1-9yY]/ ) {
 	    $obj->{filerefbuf}  = $obj->{filerefbuf} =~ /^(\d)+$/ ? $1 : 1;
 	    $obj->{filerefpath} = $path if( ! defined $obj->{filerefpath} );
 	}
-	else
-	{
+	else {
 	    delete $obj->{filerefbuf};
 	}
     }

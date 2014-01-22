@@ -1719,8 +1719,7 @@ sub add_fileref {
 	$hash{linkname} = readlink $filerefpath;
     }
 
-    foreach my $key ( keys %hash )
-    {
+    foreach my $key ( keys %hash ) {
         $opt->{$key} = $hash{$key}
 	    unless ( $key eq 'ino' || defined $opt->{$key} );
     }
