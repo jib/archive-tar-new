@@ -2,6 +2,7 @@ package Archive::Tar::File;
 use strict;
 
 use Carp                ();
+use Errno        qw(EINTR);
 use IO::File;
 use File::Spec::Unix    ();
 use File::Spec          ();
@@ -13,7 +14,7 @@ use Archive::Tar::Constant;
 
 use vars qw[@ISA $VERSION];
 #@ISA        = qw[Archive::Tar];
-$VERSION    = '1.96001';
+$VERSION    = '1.96002';
 
 ### set value to 1 to oct() it during the unpack ###
 
@@ -511,13 +512,17 @@ sub full_path {
 Used by Archive::Tar internally when writing the tar file:
 prints the data, and reads/prints them in streaming mode.
 
+The optional $progress_cb CODE argument can be used to monitor the progress
+inside the buffer loop, or to check some condition even inside a really long write.
+
 Returns the bytes printed and optionally an error string.
 
 =cut
 
 sub print_data {
-    my $self   = shift;
-    my $handle = shift;
+    my $self        = shift;
+    my $handle      = shift;
+    my $progress_cb = shift;
 
     my $bytes_printed;
     my $err_str = '';
@@ -550,6 +555,7 @@ sub print_data {
 		}
 		else {
 		    $err_str = "Could not write data for: " . $self->full_path();
+		    $eof++; # just to end the loop
 		}
 	    }
 	    elsif ( ! $!{EINTR} ) {
@@ -558,6 +564,7 @@ sub print_data {
 		}
 	        $eof++;
 	    }
+	    &$progress_cb() if ( defined $progress_cb );
 	}
 
 	my $cl_success = close($in_fh);
@@ -578,6 +585,8 @@ sub print_data {
 	else {
 	    $err_str = "Could not write data for: " . $self->full_path();
 	}
+
+	&$progress_cb() if ( defined $progress_cb );
     }
 
     return wantarray ? ( $bytes_printed, $err_str ) : $bytes_printed;

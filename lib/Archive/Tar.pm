@@ -31,7 +31,7 @@ use vars qw[$DEBUG $error $VERSION $WARN $FOLLOW_SYMLINK $CHOWN $CHMOD
 $DEBUG                  = 0;
 $WARN                   = 1;
 $FOLLOW_SYMLINK         = 0;
-$VERSION                = "1.96001";
+$VERSION                = "1.96002";
 $CHOWN                  = 1;
 $CHMOD                  = 1;
 $SAME_PERMISSIONS       = $> == 0 ? 1 : 0;
@@ -1252,8 +1252,9 @@ away in the directory you specify as prefix. So if you have files
 will be written to the archive as 'foo/a' and 'foo/b'.
 
 The fourth argument is an optional hashref. Accepted keys are
-'incremental' and 'handle', allowing incremental writes with a pre-allocated
-file handle. In case of incremental writes, the final write() call
+'incremental', 'handle', and 'progress_cb',
+allowing incremental writes with a pre-allocated file handle.
+In case of incremental writes, the final write() call
 should be issued without the incremental flag set, to write the
 end marker.
 Incremental writes may be used togeter with C<add_fileref> calls
@@ -1261,6 +1262,8 @@ and/or buffered C<add_file> calls.
 The main purpose of incremental C<write> calls is to start producing
 the tar file early, especially in situations where looking up the list
 of files to create is a time consuming task.
+The optional progress_cb CODE argument can be used to monitor the progress
+inside the buffer loop, or to check some condition even inside a really long write.
 
 If no arguments are given, C<write> returns the entire formatted
 archive as a string, which could be useful if you'd like to stuff the
@@ -1279,11 +1282,12 @@ sub write {
     my $opt         = shift;
     my $dummy       = '';
 
-    my $incremental = $opt && ref $opt eq 'HASH' &&
-                          defined $opt->{incremental} && $opt->{incremental} =~ /^[1-9yY]/ ? 
+    $opt = {} if ( ! defined $opt || ref $opt ne 'HASH' );
+    my $incremental     = defined $opt->{incremental} && $opt->{incremental} =~ /^[1-9yY]/ ? 
 			      1 : 0;
-    my $external_handle = $opt && ref $opt eq 'HASH' && defined $opt->{handle} ?
-			  $opt->{handle} : undef;
+    my $external_handle = defined $opt->{handle} ? $opt->{handle} : undef;
+    my $progress_cb     = defined $opt->{progress_cb} && ref $opt->{progress_cb} eq 'CODE' ?
+			      $opt->{progress_cb} : undef;
 
     ### only need a handle if we have a file to print to ###
     my $handle = defined $external_handle
@@ -1395,14 +1399,21 @@ sub write {
             }
 
             if( $link_ok or $data_ok ) {
-		my ( $bytes_printed, $err_str ) = $clone->print_data($handle);
+		my ( $bytes_printed, $err_str ) =
+		    $clone->print_data($handle, $progress_cb);
 		if( $err_str ne '' ) {
                     $self->_error($err_str);
                     return;
 		}
 		elsif( $bytes_printed  > 0 ) {
 		    ### pad the end of the clone if required ###
-		    print $handle TAR_PAD->( $clone->size ) if $clone->size % BLOCK
+		    if ( $clone->size % BLOCK ) {
+			unless( print $handle TAR_PAD->( $clone->size ) ) {
+			    $self->_error(q[Could not write header for: ] .
+						$clone->full_path);
+			    return;
+			}
+		    }
 		}
             }
 
