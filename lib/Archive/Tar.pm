@@ -520,12 +520,13 @@ sub _read_tar {
 	if ($filter && $entry->name !~ $filter) {
 	    next LOOP;
 
+	} elsif ($filter_cb && ! $filter_cb->($entry)) {
+	    next LOOP;
+
 	### skip this entry if it's a pax header. This is a special file added
 	### by, among others, git-generated tarballs. It holds comments and is
 	### not meant for extracting. See #38932: pax_global_header extracted
 	} elsif ( $entry->name eq PAX_HEADER or $entry->type =~ /^(x|g)$/ ) {
-	    next LOOP;
-	} elsif ($filter_cb && ! $filter_cb->($entry)) {
 	    next LOOP;
 	}
 
