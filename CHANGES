@@ -1,3 +1,6 @@
+1.98  14/06/2014 (TINITA)
+- ptardiff and ptargrep should use prefix if defined
+
 1.96  24/10/2013
 - integrate Package::Constants into Constant module
   and remove requirement on it.

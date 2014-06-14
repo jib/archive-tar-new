@@ -14,6 +14,8 @@ t/03_file.t
 t/04_resolved_issues.t
 t/05_iter.t
 t/06_error.t
+t/07_ptardiff.t
+t/08_ptargrep.t
 t/90_symlink.t
 t/99_pod.t
 t/src/header/signed.tar
