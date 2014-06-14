@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-use Test::More tests => 1;
+use Test::More;
 
 use File::Spec;
 use FindBin '$Bin';
@@ -13,6 +13,10 @@ my $bar = File::Spec->catfile("t", "tartest", "bar");
 my $tarfile = File::Spec->catfile("t", "tartest.tar");
 my $ptardiff = File::Spec->catfile($Bin, "..", "bin", "ptardiff");
 my $cmd = "$^X $ptardiff $tarfile";
+
+eval { require Text::Diff; };
+plan skip_all => 'Text::Diff required to test ptardiff' if $@;
+plan tests => 1;
 
 # create directory/files
 mkdir $tartest;
@@ -40,7 +44,7 @@ cmp_ok($out, '=~', qr{^\+added$}m, "ptardiff shows added text");
 # cleanup
 END {
     unlink $tarfile;
-    unlink $foo or die $!;
-    unlink $bar or die $!;
-    rmdir $tartest or die $!;
+    if ( -e $foo ) { unlink $foo or die $!; }
+    if ( -e $bar ) { unlink $bar or die $!; }
+    if ( -d $tartest ) { rmdir $tartest or die $!; }
 }
