@@ -31,7 +31,7 @@ use vars qw[$DEBUG $error $VERSION $WARN $FOLLOW_SYMLINK $CHOWN $CHMOD
 $DEBUG                  = 0;
 $WARN                   = 1;
 $FOLLOW_SYMLINK         = 0;
-$VERSION                = "1.96002";
+$VERSION                = "1.96003";
 $CHOWN                  = 1;
 $CHMOD                  = 1;
 $SAME_PERMISSIONS       = $> == 0 ? 1 : 0;
@@ -2517,6 +2517,7 @@ Incremental write support added by Markus Jansen.
 
 This module is copyright (c) 2002 - 2009 Jos Boumans
 E<lt>kane@cpan.orgE<gt>. All rights reserved.
+Copyright (c) 2014 Ericsson AB for the modifications supplied by Markus Jansen.
 
 This library is free software; you may redistribute and/or modify
 it under the same terms as Perl itself.
