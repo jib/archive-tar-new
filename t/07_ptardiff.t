@@ -7,10 +7,10 @@ use FindBin '$Bin';
 use Archive::Tar;
 
 # filenames
-my $tartest = File::Spec->catfile("t", "tartest");
-my $foo = File::Spec->catfile("t", "tartest", "foo");
-my $bar = File::Spec->catfile("t", "tartest", "bar");
-my $tarfile = File::Spec->catfile("t", "tartest.tar");
+my $tartest = File::Spec->catfile("t", "ptardiff");
+my $foo = File::Spec->catfile("t", "ptardiff", "foo");
+my $bar = File::Spec->catfile("t", "ptardiff", "bar");
+my $tarfile = File::Spec->catfile("t", "ptardiff.tar");
 my $ptardiff = File::Spec->catfile($Bin, "..", "bin", "ptardiff");
 my $cmd = "$^X $ptardiff $tarfile";
 
