@@ -1,3 +1,6 @@
+2.04  14/12/2014
+- RT#100903 enable ptargrep.t to work on VMS
+
 2.02  14/09/2014
 - Tests should now be able to be run in parallel
 
