@@ -1,3 +1,8 @@
+2.06  24/04/2016 (ISHIGAKI && BOOK)
+- changed some of the "A"s in the UNPACK constant to "a"
+  to allow trailing whitespaces in an archived filename
+- roundtrip tests
+
 2.04  14/12/2014
 - RT#100903 enable ptargrep.t to work on VMS
 
