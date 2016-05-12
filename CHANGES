@@ -1,3 +1,6 @@
+2.08  12/05/2016
+- Add the roundtrip test to MANIFEST
+
 2.06  24/04/2016 (ISHIGAKI && BOOK)
 - changed some of the "A"s in the UNPACK constant to "a"
   to allow trailing whitespaces in an archived filename
