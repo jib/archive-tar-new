@@ -1,3 +1,6 @@
+2.10  27/07/2016 (TONYC)
+- CVE-2016-1238: avoid loading optional modules from default .
+
 2.08  12/05/2016
 - Add the roundtrip test to MANIFEST
 
