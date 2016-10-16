@@ -1,3 +1,7 @@
+2.12  16/10/2016 (KHW && JKEENAN)
+- Fix pod in bin/ptar
+- Distinguish between archives with/without directory entries
+
 2.10  27/07/2016 (TONYC)
 - CVE-2016-1238: avoid loading optional modules from default .
 
