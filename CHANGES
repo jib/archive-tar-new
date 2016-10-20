@@ -1,3 +1,6 @@
+2.14  20/10/2016
+- Fix roundtrip test when tar executable is absent
+
 2.12  16/10/2016 (KHW && JKEENAN)
 - Fix pod in bin/ptar
 - Distinguish between archives with/without directory entries
