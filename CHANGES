@@ -1,3 +1,6 @@
+2.18  07/11/2016 (JHI)
+- Capture also the STDERR when checking tar exe
+
 2.16  01/11/2016 (JHI && CBERRY)
 - Make roundtrip tar exe finding robust for crappy tars
 
