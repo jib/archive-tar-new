@@ -1,3 +1,6 @@
+2.20  15/12/2016 (AGRUNDMA)
+- Check for gzip/bzip2 before round tripping gz/bz2 files in tests
+
 2.18  07/11/2016 (JHI)
 - Capture also the STDERR when checking tar exe
 
