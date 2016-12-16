@@ -1,3 +1,6 @@
+2.22  16/12/2016 (MANWAR)
+- Add missing strict/warnings pragma to Constants.pm
+
 2.20  15/12/2016 (AGRUNDMA)
 - Check for gzip/bzip2 before round tripping gz/bz2 files in tests
 
