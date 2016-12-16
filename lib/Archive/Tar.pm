@@ -263,7 +263,7 @@ sub _get_handle {
 
             ### different reader/writer modules, different error vars... sigh
             if( MODE_READ->($mode) ) {
-                $fh = IO::Uncompress::Bunzip2->new( $file ) or do {
+                $fh = IO::Uncompress::Bunzip2->new( $file, MultiStream => 1 ) or do {
                     $self->_error( qq[Could not read '$file': ] .
                         $IO::Uncompress::Bunzip2::Bunzip2Error
                     );
