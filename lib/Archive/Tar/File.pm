@@ -486,7 +486,9 @@ sub full_path {
     return $self->name unless defined $self->prefix and length $self->prefix;
 
     ### or otherwise, catfile'd
-    return File::Spec::Unix->catfile( $self->prefix, $self->name );
+    my $path = File::Spec::Unix->catfile( $self->prefix, $self->name );
+    $path .= "/" if $self->name =~ m{/$};   # Re-add trailing slash if necessary, as catfile() strips them off.
+    return $path;
 }
 
 
