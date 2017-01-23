@@ -220,7 +220,6 @@ SKIP: {
         chop $oldfiles[$i] if $directory_or_not[$i];
       }
 
-      local $TODO = "RT #119949" if $archive_name =~ /prefix-directory-concat/;
       # compare list of files
       is_deeply(
                 [ $new->list_files ],
