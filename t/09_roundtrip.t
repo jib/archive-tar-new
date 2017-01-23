@@ -53,6 +53,7 @@ push @file_only_archives, [qw( src short foo.txz )]
 
 my @file_and_directory_archives = (
     [qw( src long bar.tar )],
+    [qw( src long prefix-directory-concat.tar )],
     [qw( src linktest linktest_with_dir.tar )],
 );
 push @file_and_directory_archives, [qw( src long foo.tgz )]
@@ -224,6 +225,7 @@ SKIP: {
         chop $oldfiles[$i] if $directory_or_not[$i];
       }
 
+      local $TODO = "RT #119949" if $archive_name =~ /prefix-directory-concat/;
       # compare list of files
       is_deeply(
                 [ $new->list_files ],
