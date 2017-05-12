@@ -1756,7 +1756,8 @@ Example usage:
 
 sub iter {
     my $class       = shift;
-    my $filename    = shift or return;
+    my $filename    = shift;
+    return unless defined $filename;
     my $compressed  = shift || 0;
     my $opts        = shift || {};
 
