@@ -247,3 +247,18 @@ use_ok( $FileClass );
 		clean_78030();
 		unlink $archname;
 }
+
+### bug 97748
+### retain leading '/' for absolute pathnames.
+{   ok( 1,                      "Testing bug 97748" );
+	my $path= '/absolute/path';
+	my $tar = $Class->new;
+	isa_ok( $tar, $Class,   "   Object" );
+	my $file;
+
+	ok( $file = $tar->add_data( $path, '' ),
+		"       Added $path" );
+
+	ok( $file->full_path eq $path,
+		"	Paths match" );
+}
