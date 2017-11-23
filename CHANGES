@@ -1,4 +1,5 @@
 X.XX  XX/XX/XXXX
+- fix creating file with trailing whitespace on filename - fixes 103279
 - allow archiving with absolute pathnames - fixes 97748
 
 2.26  12/05/2017

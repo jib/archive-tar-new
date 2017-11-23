@@ -847,7 +847,7 @@ sub _extract_file {
 
     if( length $entry->type && $entry->is_file ) {
         my $fh = IO::File->new;
-        $fh->open( '>' . $full ) or (
+        $fh->open( $full, '>' ) or (
             $self->_error( qq[Could not open file '$full': $!] ),
             return
         );
