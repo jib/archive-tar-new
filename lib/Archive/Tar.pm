@@ -2250,7 +2250,7 @@ For example, if you add a Unicode string like
     $tar->add_data('file.txt', "Euro: \x{20AC}");
 
 then there will be a problem later when the tarfile gets written out
-to disk via C<$tar->write()>:
+to disk via C<< $tar->write() >>:
 
     Wide character in print at .../Archive/Tar.pm line 1014.
 
