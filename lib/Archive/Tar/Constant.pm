@@ -32,6 +32,7 @@ use constant BLOCK          => 512;
 
 use constant COMPRESS_GZIP  => 9;
 use constant COMPRESS_BZIP  => 'bzip2';
+use constant COMPRESS_XZ    => 'xz';
 
 use constant BLOCK_SIZE     => sub { my $n = int($_[0]/BLOCK); $n++ if $_[0] % BLOCK; $n * BLOCK };
 use constant TAR_PAD        => sub { my $x = shift || return; return "\0" x (BLOCK - ($x % BLOCK) ) };
@@ -77,8 +78,16 @@ use constant BZIP           => do { !$ENV{'PERL5_AT_NO_BZIP'} and
                                     $ENV{'PERL5_AT_NO_BZIP'} || $@ ? 0 : 1
                                 };
 
+                            ### allow XZ to be turned off using ENV: DEBUG only
+use constant XZ             => do { !$ENV{'PERL5_AT_NO_XZ'} and
+                                        eval { require IO::Compress::Xz;
+                                               require IO::Uncompress::UnXz; };
+                                    $ENV{'PERL5_AT_NO_XZ'} || $@ ? 0 : 1
+                                };
+
 use constant GZIP_MAGIC_NUM => qr/^(?:\037\213|\037\235)/;
 use constant BZIP_MAGIC_NUM => qr/^BZh\d/;
+use constant XZ_MAGIC_NUM   => qr/^\xFD\x37\x7A\x58\x5A\x00/;
 
 use constant CAN_CHOWN      => sub { ($> == 0 and $^O ne "MacOS" and $^O ne "MSWin32") };
 use constant CAN_READLINK   => ($^O ne 'MSWin32' and $^O !~ /RISC(?:[ _])?OS/i and $^O ne 'VMS');
