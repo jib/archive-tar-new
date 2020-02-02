@@ -1,3 +1,6 @@
+2.36  02/02/2020
+- Add xz test files to MANIFEST
+
 2.34  01/02/2020 (HEANEY && SKAJI)
 - Add xz support
 - Use 4 digit year in Time::Local call
