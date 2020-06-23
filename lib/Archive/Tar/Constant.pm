@@ -1,5 +1,10 @@
 package Archive::Tar::Constant;
 
+use strict;
+use warnings;
+
+use vars qw[$VERSION @ISA @EXPORT];
+
 BEGIN {
     require Exporter;
 
@@ -10,9 +15,6 @@ BEGIN {
 }
 
 @EXPORT = Archive::Tar::Constant->_list_consts( __PACKAGE__ );
-
-use strict;
-use warnings;
 
 use constant FILE           => 0;
 use constant HARDLINK       => 1;
