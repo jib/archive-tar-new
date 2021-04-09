@@ -71,7 +71,7 @@ Archive::Tar::File - a subclass for in-memory extracted file from Archive::Tar
 
 =head1 DESCRIPTION
 
-Archive::Tar::Files provides a neat little object layer for in-memory
+Archive::Tar::File provides a neat little object layer for in-memory
 extracted files. It's mostly used internally in Archive::Tar to tidy
 up the code, but there's no reason users shouldn't use this API as
 well.
