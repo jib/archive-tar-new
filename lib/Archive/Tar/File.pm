@@ -601,7 +601,7 @@ sub rename {
 	return 1;
 }
 
-=head2 $bool = $file->chmod $mode)
+=head2 $bool = $file->chmod( $mode )
 
 Change mode of $file to $mode. The mode can be a string or a number
 which is interpreted as octal whether or not a leading 0 is given.
