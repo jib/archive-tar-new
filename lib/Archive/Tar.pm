@@ -24,6 +24,7 @@ use strict;
 use vars qw[$DEBUG $error $VERSION $WARN $FOLLOW_SYMLINK $CHOWN $CHMOD
             $DO_NOT_USE_PREFIX $HAS_PERLIO $HAS_IO_STRING $SAME_PERMISSIONS
             $INSECURE_EXTRACT_MODE $ZERO_PAD_NUMBERS @ISA @EXPORT $RESOLVE_SYMLINK
+            $EXTRACT_BLOCK_SIZE
          ];
 
 @ISA                    = qw[Exporter];
@@ -39,6 +40,7 @@ $DO_NOT_USE_PREFIX      = 0;
 $INSECURE_EXTRACT_MODE  = 0;
 $ZERO_PAD_NUMBERS       = 0;
 $RESOLVE_SYMLINK        = $ENV{'PERL5_AT_RESOLVE_SYMLINK'} || 'speed';
+$EXTRACT_BLOCK_SIZE     = 1024 * 1024 * 1024;
 
 BEGIN {
     use Config;
@@ -894,10 +896,18 @@ sub _extract_file {
 
         if( $entry->size ) {
             binmode $fh;
-            syswrite $fh, $entry->data or (
-                $self->_error( qq[Could not write data to '$full'] ),
-                return
-            );
+            my $offset = 0;
+            my $content = $entry->get_content_by_ref();
+            while ($offset < $entry->size) {
+                my $written
+                    = syswrite $fh, $$content, $EXTRACT_BLOCK_SIZE, $offset;
+                if (defined $written) {
+                    $offset += $written;
+                } else {
+                    $self->_error( qq[Could not write data to '$full': $!] );
+                    return;
+                }
+            }
         }
 
         close $fh or (
@@ -2162,6 +2172,14 @@ numbers. Added for compatibility with C<busybox> implementations.
 	Limitation
 
 		It won't work for terminal, pipe or sockets or every non seekable source.
+
+=head $Archive::Tar::EXTRACT_BLOCK_SIZE
+
+This variable holds an integer with the block size that should be used when
+writing files during extraction. It defaults to 1 GiB. Please note that this
+cannot be arbitrarily large since some operating systems limit the number of
+bytes that can be written in one call to C<write(2)>, so if this is too large,
+extraction may fail with an error.
 
 =cut
 
