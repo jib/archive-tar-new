@@ -32,7 +32,7 @@ use vars qw[$DEBUG $error $VERSION $WARN $FOLLOW_SYMLINK $CHOWN $CHMOD
 $DEBUG                  = 0;
 $WARN                   = 1;
 $FOLLOW_SYMLINK         = 0;
-$VERSION                = "2.40";
+$VERSION                = "3.00";
 $CHOWN                  = 1;
 $CHMOD                  = 1;
 $SAME_PERMISSIONS       = $> == 0 ? 1 : 0;
@@ -2173,7 +2173,7 @@ numbers. Added for compatibility with C<busybox> implementations.
 
 		It won't work for terminal, pipe or sockets or every non seekable source.
 
-=head $Archive::Tar::EXTRACT_BLOCK_SIZE
+=head2 $Archive::Tar::EXTRACT_BLOCK_SIZE
 
 This variable holds an integer with the block size that should be used when
 writing files during extraction. It defaults to 1 GiB. Please note that this
