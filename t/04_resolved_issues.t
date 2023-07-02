@@ -273,8 +273,10 @@ if ($^O ne 'msys') # symlink tests fail on Windows/msys2
   ok( 1,                      "Testing bug 103279" );
 	my $tar = $Class->new;
 	isa_ok( $tar, $Class,       "   Object" );
-	ok( $tar->add_data( 'white_space   ', '' ),
+	ok( open my $fh, '>', 'white_space   ' );
+	ok( $tar->add_files( 'white_space   ', '' ),
 				    "   Add file <white_space   > containing filename with trailing whitespace");
+	unlink 'white_space   ';
 	ok( $tar->extract(),        "	Extract filename with trailing whitespace" );
   SKIP: {
     skip "Windows tries to be clever", 1 if $^O eq 'MSWin32';
