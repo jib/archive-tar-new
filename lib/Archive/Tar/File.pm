@@ -259,7 +259,7 @@ sub _new_from_file {
         unless ($type == DIR ) {
             my $fh = IO::File->new;
 
-            unless( $fh->open($path) ) {
+            unless( $fh->open($path, 'r') ) {
                 ### dangling symlinks are fine, stop reading but continue
                 ### creating the object
                 last READ if $type == SYMLINK;
