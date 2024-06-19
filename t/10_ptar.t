@@ -13,7 +13,7 @@ my $tarfile = File::Spec->catfile("t", "ptar.tar");
 my $ptar = File::Spec->catfile($Bin, "..", "bin", "ptar");
 my $cmd = "$^X $ptar";
 
-plan tests => 7;
+plan tests => 11;
 my $out;
 
 # Create directory/files
@@ -38,6 +38,16 @@ $out = qx{$cmd -x -f$tarfile};
 is($?, 0, "extract ok");
 is($out, "", "extract silent");
 ok(-e $foo, "extracted foo from archive");
+
+# Create archive with --format=ustar, bundled options
+$out = qx{$cmd --format=ustar -cf $tarfile $foo};
+is($?, 0, "--format=ustar ignored ok");
+is($out, "", "--format=ustar ignored silently");
+
+# Create archive with --format ustar
+$out = qx{$cmd -c -f $tarfile --format ustar $foo};
+is($?, 0, "--format ustar ignored ok");
+is($out, "", "--format ustar ignored silently");
 
 # Cleanup
 END {
