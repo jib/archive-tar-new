@@ -99,6 +99,13 @@ use constant CAN_READLINK   => ($^O ne 'MSWin32' and $^O !~ /RISC(?:[ _])?OS/i a
 use constant ON_UNIX        => ($^O ne 'MSWin32' and $^O ne 'MacOS' and $^O ne 'VMS');
 use constant ON_VMS         => $^O eq 'VMS';
 
+### Check: Does Perl create symlinks?
+### ON_UNIX is false on Windows even when symlink() works (e.g. Win Server 2025
+### with SeCreateSymbolicLinkPrivilege / Developer Mode enabled, Strawberry Perl
+### 5.38+).  Use $Config{d_symlink} as the authoritative indicator instead.
+use Config;
+use constant CAN_SYMLINK    => ($Config::Config{d_symlink} ? 1 : 0);
+
 sub _list_consts {
     my $class = shift;
     my $pkg   = shift;

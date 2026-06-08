@@ -978,7 +978,7 @@ sub _make_special_file {
             }
         }
         my $fail;
-        if( ON_UNIX ) {
+        if( CAN_SYMLINK ) {
             symlink( $entry->linkname, $file ) or $fail++;
 
         } else {
