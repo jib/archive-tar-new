@@ -978,9 +978,16 @@ sub _make_special_file {
             }
         }
         my $fail;
-        if( CAN_SYMLINK ) {
+        if( ON_UNIX ) {
+            ### Unix requires real symlinks here.
             symlink( $entry->linkname, $file ) or $fail++;
 
+        } elsif( CAN_SYMLINK ) {
+            ### Non-Unix symlink support can still fail at runtime.
+            unless( symlink( $entry->linkname, $file ) ) {
+                $self->_extract_special_file_as_plain_file( $entry, $file )
+                    or $fail++;
+            }
         } else {
             $self->_extract_special_file_as_plain_file( $entry, $file )
                 or $fail++;
@@ -1133,7 +1140,9 @@ seach_entry:
 
 		if($Archive::Tar::RESOLVE_SYMLINK!~/none/){
 			if(my $link_entry = shift()){#fallback mode when symlinks are using relative notations ( ../a/./b/text.bin )
-				$file = _symlinks_resolver( $link_entry->name, $file );
+				### use full_path (prefix + name) so relative linknames resolve
+				### correctly; using ->name alone drops the directory prefix
+				$file = _symlinks_resolver( $link_entry->full_path, $file );
 				goto seach_entry if $self->_data;
 
 				#this will be slower than never, but won't failed!
