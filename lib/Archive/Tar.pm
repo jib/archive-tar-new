@@ -247,7 +247,7 @@ sub _get_handle {
         ### reading. otherwise, just use what the user requested.
         my $magic = '';
         if( MODE_READ->($mode) ) {
-            open my $tmp, $file or do {
+            open my $tmp, '<', $file or do {
                 $self->_error( qq[Could not open '$file' for reading: $!] );
                 return;
             };
