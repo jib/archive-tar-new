@@ -451,6 +451,17 @@ sub _read_tar {
                     qq[' declared size ] . $entry->size .
                     qq[ bytes exceeds \$Archive::Tar::MAX_FILE_SIZE ] .
                     qq[($MAX_FILE_SIZE); refusing to allocate] );
+
+                ### skip past the refused entry's data, 64 BLOCKS at a
+                ### time, so the next header is read from the right offset
+                ### instead of parsing every data block as a header
+                my $amt = $block;
+                while ($amt > 0) {
+                    my $this = 64 * BLOCK;
+                    $this = $amt if $this > $amt;
+                    last LOOP if $handle->read( my $junk, $this ) < $this;
+                    $amt -= $this;
+                }
                 next LOOP;
             }
 

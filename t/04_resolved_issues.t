@@ -293,3 +293,69 @@ SKIP: {
 	ok( -e 'white_space   ',    "	<white_space   > should exist" );
 	unlink foreach ('white_space   ', 'white_space');
 }
+
+### GH #47
+### an entry refused by $MAX_FILE_SIZE must have its data skipped, not
+### re-parsed one block at a time as (invalid) headers
+{   ok( 1,                      "Testing GH #47" );
+
+    my $out = $$ . '.tar';
+    my @warn;
+    local $SIG{__WARN__} = sub { push @warn, @_ };
+    local $Archive::Tar::WARN = 1;
+    local $Archive::Tar::MAX_FILE_SIZE = 1024;
+
+    {   my $tar = $Class->new;
+        $tar->add_data( 'big.txt',   'A' x ( 64 * 1024 ) );
+        $tar->add_data( 'small.txt', 'B' x 50 );
+        ok( $tar->write($out),  "   File written to $out" );
+    }
+
+    {   @warn = ();
+        my $tar = $Class->new;
+        my @files = $tar->read( $out );
+        is_deeply( [ map { $_->name } @files ], [ 'small.txt' ],
+                                "   Only the entry under the cap was read" );
+        is( scalar(@warn), 1,   "   Exactly one error for the refused entry" );
+        like( $warn[0], qr/exceeds \$Archive::Tar::MAX_FILE_SIZE/,
+                                "       And it is the size cap error" );
+    }
+
+    {   @warn = ();
+        my $next = $Class->iter( $out );
+        my @names;
+        while( my $f = $next->() ) { push @names, $f->name }
+        is_deeply( \@names, [ 'small.txt' ],
+                                "   Iterator skips the refused entry" );
+        is( scalar(@warn), 1,   "       With exactly one error" );
+    }
+
+    ### header declaring 2 GiB, with far less data than that behind it
+    SKIP: {
+        skip "Crafted header assumes ASCII", 2 if ord "A" != 65;
+
+        @warn = ();
+        open my $fh, '<', $out or die "Could not open $out: $!";
+        binmode $fh;
+        my $raw = do { local $/; <$fh> };
+        close $fh;
+
+        my $head = substr $raw, 0, 512;
+        substr( $head, 124, 12 ) = sprintf "%011o\0", 2 * 1024 ** 3;
+        substr( $head, 148, 8 )  = ' ' x 8;
+        substr( $head, 148, 8 )  = sprintf "%06o\0 ", unpack '%16C*', $head;
+        substr( $raw, 0, 512 )   = $head;
+
+        open $fh, '>', $out or die "Could not open $out: $!";
+        binmode $fh;
+        print $fh $raw;
+        close $fh;
+
+        my $tar = $Class->new;
+        my @files = $tar->read( $out );
+        is( scalar(@files), 0,  "   Truncated oversized entry yields no files" );
+        is( scalar(@warn), 1,   "       With exactly one error" );
+    }
+
+    unless( $NO_UNLINK ) { 1 while unlink $out }
+}
